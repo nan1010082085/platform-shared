@@ -17,13 +17,15 @@ import { storeToRefs } from 'pinia'
 import { useRouter, useRoute } from 'vue-router'
 import { useAuthStore } from './stores/authStore'
 import { apiClient, setTokenProvider, setUnauthorizedHandler } from './apiClient'
+import {
+  startTokenRefreshSchedule,
+  stopTokenRefreshSchedule,
+  refreshAccessToken,
+} from './authSession'
 import type { LoginPayload, LoginResponse, AuthUser } from './authTypes'
 
 /** Whether tokenProvider has been injected (once globally) */
 let providerInitialized = false
-
-/** Auto-refresh timer handle */
-let refreshTimer: ReturnType<typeof setTimeout> | null = null
 
 export function useAuth() {
   const store = useAuthStore()
@@ -35,49 +37,23 @@ export function useAuth() {
   if (!providerInitialized) {
     setTokenProvider(() => store.accessToken)
     setUnauthorizedHandler(() => {
-      cancelRefresh()
+      stopTokenRefreshSchedule()
       store.reset()
     })
     providerInitialized = true
   }
 
-  /**
-   * Schedule automatic token refresh 60s before expiry.
-   * @param expiresIn - seconds until access token expires
-   */
   function scheduleRefresh(expiresIn: number): void {
-    cancelRefresh()
-    // Refresh 60s before expiry, minimum 10s
-    const delay = Math.max((expiresIn - 60) * 1000, 10_000)
-    refreshTimer = setTimeout(() => {
-      doRefresh()
-    }, delay)
+    startTokenRefreshSchedule(expiresIn)
   }
 
-  /** Cancel pending auto-refresh */
   function cancelRefresh(): void {
-    if (refreshTimer) {
-      clearTimeout(refreshTimer)
-      refreshTimer = null
-    }
+    stopTokenRefreshSchedule()
   }
 
-  /**
-   * Exchange refresh token for a new access token.
-   * Silently fails if refresh token is invalid (user will hit 401 on next request).
-   */
   async function doRefresh(): Promise<void> {
-    const rt = store.refreshToken
-    if (!rt) return
-
-    try {
-      const res = await apiClient.post<{ accessToken: string; refreshToken?: string; expiresIn: number }>('/auth/refresh', {
-        refreshToken: rt,
-      })
-      store.setTokens(res.accessToken, res.refreshToken)
-      scheduleRefresh(res.expiresIn)
-    } catch {
-      // Refresh failed -- clear auth state, user must re-login
+    const ok = await refreshAccessToken()
+    if (!ok) {
       cancelRefresh()
       store.reset()
     }

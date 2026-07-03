@@ -27,6 +27,8 @@ export default defineConfig({
         index: resolve(__dirname, 'index.ts'),
         'config/element': resolve(__dirname, 'config/element.ts'),
         'utils/apiClient': resolve(__dirname, 'utils/apiClient.ts'),
+        'utils/authPaths': resolve(__dirname, 'utils/authPaths.ts'),
+        'utils/authSession': resolve(__dirname, 'utils/authSession.ts'),
         'utils/authTypes': resolve(__dirname, 'utils/authTypes.ts'),
         'utils/form': resolve(__dirname, 'utils/form.ts'),
         'utils/iconResolver': resolve(__dirname, 'utils/iconResolver.ts'),

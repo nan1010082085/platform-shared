@@ -38,6 +38,41 @@ export interface AiPublishedEvent {
 
 let socket: Socket | null = null
 let connected = false
+let tokenProvider: (() => string | null) | null = null
+let pendingTokenListener: (() => void) | null = null
+
+/** 注入 token 提供者（与 apiClient.setTokenProvider 用法一致） */
+export function setSocketTokenProvider(provider: () => string | null): void {
+  tokenProvider = provider
+}
+
+function getAuthToken(): string {
+  return tokenProvider?.() ?? localStorage.getItem('sfp_access_token') ?? ''
+}
+
+function clearPendingTokenListener(): void {
+  if (pendingTokenListener) {
+    window.removeEventListener('storage', pendingTokenListener)
+    pendingTokenListener = null
+  }
+}
+
+function teardownSocket(): void {
+  if (!socket) return
+  socket.removeAllListeners()
+  socket.disconnect()
+  socket = null
+  connected = false
+}
+
+/** 根据当前页面路径解析 Socket.IO path（生产走 /schema-platform/ws） */
+export function resolveSocketPath(explicit?: string): string {
+  if (explicit) return explicit
+  if (typeof window !== 'undefined' && window.location.pathname.startsWith('/schema-platform')) {
+    return '/schema-platform/ws'
+  }
+  return '/ws'
+}
 
 /** 获取当前连接状态 */
 export function isConnected(): boolean {
@@ -59,18 +94,34 @@ export interface SocketConnectOptions {
  * @param opts - 可选配置，由调用方根据环境传入 url/path
  */
 export function connect(opts?: SocketConnectOptions): void {
-  if (socket) return
+  if (socket?.connected) return
 
   const url = opts?.url ?? (typeof window !== 'undefined' ? window.location.origin : '')
-  const path = opts?.path ?? '/ws'
+  const path = resolveSocketPath(opts?.path)
   if (!url) return
+
+  const token = getAuthToken()
+  if (!token) {
+    // 登录完成后再连；避免空 token 占住 singleton 导致永远无法重连
+    if (typeof window !== 'undefined' && !pendingTokenListener) {
+      pendingTokenListener = () => {
+        if (!getAuthToken()) return
+        clearPendingTokenListener()
+        connect(opts)
+      }
+      window.addEventListener('storage', pendingTokenListener)
+    }
+    console.warn('[socket] deferred connect: no auth token')
+    return
+  }
+
+  clearPendingTokenListener()
+  teardownSocket()
 
   socket = io(url, {
     path,
     transports: ['websocket', 'polling'],
-    auth: {
-      token: localStorage.getItem('sfp_access_token') || '',
-    },
+    auth: { token },
   })
 
   socket.on('connect', () => {
@@ -85,16 +136,17 @@ export function connect(opts?: SocketConnectOptions): void {
 
   socket.on('connect_error', (err) => {
     console.warn('[socket] connection error:', err.message)
+    // 认证失败时释放 singleton，允许后续用新 token 重连
+    if (/authentication|token|expired/i.test(err.message)) {
+      teardownSocket()
+    }
   })
 }
 
 /** 断开连接 */
 export function disconnect(): void {
-  if (socket) {
-    socket.disconnect()
-    socket = null
-    connected = false
-  }
+  clearPendingTokenListener()
+  teardownSocket()
 }
 
 /** 标识当前用户 */

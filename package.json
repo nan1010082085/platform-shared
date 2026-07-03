@@ -1,12 +1,9 @@
 {
   "name": "@schema-platform/platform-shared",
-  "version": "1.1.7",
-  "private": false,
+  "version": "1.2.1",
+  "private": true,
   "type": "module",
   "repository": "github:schema-platform/schema-form-platform-shared",
-  "publishConfig": {
-    "registry": "https://npm.pkg.github.com"
-  },
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "exports": {
@@ -59,6 +56,10 @@
       "types": "./dist/utils/authPaths.d.ts",
       "import": "./dist/utils/authPaths.js"
     },
+    "./utils/authSession": {
+      "types": "./dist/utils/authSession.d.ts",
+      "import": "./dist/utils/authSession.js"
+    },
     "./utils/useDataLoading": {
       "types": "./dist/utils/useDataLoading.d.ts",
       "import": "./dist/utils/useDataLoading.js"
@@ -110,8 +111,7 @@
   ],
   "scripts": {
     "build": "vite build",
-    "test": "vitest run",
-    "prepublishOnly": "npm run build"
+    "test": "vitest run"
   },
   "dependencies": {
     "@element-plus/icons-vue": "^2.3.1",

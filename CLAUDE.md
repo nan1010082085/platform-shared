@@ -33,8 +33,8 @@
 - 工具：`./utils/apiClient` 等
 
 ### 发包规则
-- **修改后必须发包**：本包是公共依赖，修改源码后必须更新版本号 → `pnpm publish`，否则下游项目的改动不生效。
-- **发包前本地验证**：先通过 `workspace:*` 链接在下游项目验证功能正确，确认无误后再发包。
+- **同仓前端消费**：下游 Vite 项目通过 `file:` + `vite-shared-source.mjs` 直接引用本包源码，改完即生效，无需发版。
+- **跨仓 / server 运行时**：才需更新版本号 → `pnpm publish`，server 部署仍依赖 dist。
 
 ### 环境规则
 - **gh CLI 已认证**：`gh` 已登录、`GITHUB_TOKEN` 环境变量已就绪，禁止检查 token、禁止询问用户设置

@@ -6,7 +6,7 @@
  * - 响应拦截器：统一错误处理，401 触发 unauthorizedHandler
  */
 import axios, { type AxiosInstance, type AxiosResponse, type AxiosError, type InternalAxiosRequestConfig } from 'axios'
-import { isAuthLoginPath } from './authPaths.js'
+import { isAuthLoginPath, redirectToLogin } from './authPaths.js'
 
 export class ApiError extends Error {
   public readonly status: number
@@ -28,23 +28,24 @@ export interface ApiResponse<T> {
 }
 
 const BASE_URL = import.meta.env.VITE_API_BASE_URL || '/schema-platform/api'
+const ACCESS_TOKEN_KEY = 'sfp_access_token'
 
 /** Token 提供者，由 useAuth 注入，避免 apiClient 直接耦合 store */
 let tokenProvider: (() => string | null) | null = null
+
+function resolveAuthToken(): string | null {
+  return tokenProvider?.() ?? localStorage.getItem(ACCESS_TOKEN_KEY)
+}
 
 /** 401 回调，由 useAuth 注入，用于清除认证状态 */
 let onUnauthorized: (() => void) | null = null
 
 export function setTokenProvider(provider: () => string | null): void {
-  if (!tokenProvider) {
-    tokenProvider = provider
-  }
+  tokenProvider = provider
 }
 
 export function setUnauthorizedHandler(handler: () => void): void {
-  if (!onUnauthorized) {
-    onUnauthorized = handler
-  }
+  onUnauthorized = handler
 }
 
 // ── axios 实例 ──
@@ -61,7 +62,7 @@ const instance: AxiosInstance = axios.create({
 
 instance.interceptors.request.use(
   (config: InternalAxiosRequestConfig) => {
-    const token = tokenProvider?.()
+    const token = resolveAuthToken()
     if (token) {
       config.headers.Authorization = `Bearer ${token}`
     }
@@ -91,16 +92,7 @@ instance.interceptors.response.use(
       if (status === 401 && axiosError.config?.url !== '/auth/login') {
         onUnauthorized?.()
         if (!isAuthLoginPath()) {
-          const path = window.location.pathname
-          if (path.startsWith('/schema-platform/editor')) {
-            window.location.href = '/schema-platform/editor/login'
-          } else if (path.startsWith('/schema-platform/flow')) {
-            window.location.href = '/schema-platform/flow/login'
-          } else if (path.startsWith('/schema-platform/ai')) {
-            window.location.href = '/schema-platform/ai/login'
-          } else {
-            window.location.href = '/schema-platform/login'
-          }
+          redirectToLogin()
         }
         return Promise.reject(new ApiError('Authentication required', 401))
       }
