@@ -1,10 +1,12 @@
+import { APP_CONFIGS } from '../qiankun/config'
+
 /** 当前是否在任意子应用的登录页（含尾斜杠与 query） */
 export function isAuthLoginPath(pathname = window.location.pathname): boolean {
   return /\/login\/?$/.test(pathname)
 }
 
-const SHELL_BASE = '/schema-platform'
-const EMBEDDED_PATH_RE = /\/schema-platform\/(app|standalone)\/(editor|flow|ai)(\/|$)/
+const SHELL_BASE = APP_CONFIGS.shell.basePath.replace(/\/$/, '')
+const EMBEDDED_PATH_RE = new RegExp(`${SHELL_BASE.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\/(app|standalone)\\/(editor|flow|ai)(\\/|$)`)
 
 declare global {
   interface Window {

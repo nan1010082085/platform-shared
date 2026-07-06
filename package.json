@@ -3,7 +3,7 @@
   "version": "1.2.1",
   "private": true,
   "type": "module",
-  "repository": "github:schema-platform/schema-form-platform-shared",
+  "repository": "github:schema-platform/platform-shared",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "exports": {

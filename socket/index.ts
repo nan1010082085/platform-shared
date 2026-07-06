@@ -1,5 +1,5 @@
 /**
- * @schema-form/socket — Socket.IO 客户端封装
+ * @socket — Socket.IO 客户端封装
  *
  * 提供实时通信能力，支持编辑器与 AI 应用之间的协作。
  * 使用 socket.io-client 连接服务端 Socket.IO。

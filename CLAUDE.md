@@ -1,4 +1,4 @@
-# schema-form-platform-shared
+# platform-shared
 
 `@schema-platform/platform-shared` — 平台公共组件与工具库。
 
