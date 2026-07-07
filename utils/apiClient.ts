@@ -44,6 +44,13 @@ export function setTokenProvider(provider: () => string | null): void {
   tokenProvider = provider
 }
 
+/** 401 时尝试 refresh 后重试一次（由 authSession 注入） */
+let tokenRefreshHandler: (() => Promise<boolean>) | null = null
+
+export function setTokenRefreshHandler(handler: () => Promise<boolean>): void {
+  tokenRefreshHandler = handler
+}
+
 export function setUnauthorizedHandler(handler: () => void): void {
   onUnauthorized = handler
 }
@@ -87,8 +94,32 @@ instance.interceptors.response.use(
     const axiosError = error as AxiosError
     if (axios.isAxiosError(axiosError) && axiosError.response) {
       const { status, data } = axiosError.response
+      const config = axiosError.config as (InternalAxiosRequestConfig & { _authRetried?: boolean }) | undefined
 
-      // 401 清除认证状态；已在登录页时避免整页重载死循环
+      // 401：先 refresh 再重试一次，仍失败则清会话
+      if (
+        status === 401
+        && config
+        && !config._authRetried
+        && config.url !== '/auth/login'
+        && config.url !== '/auth/refresh'
+        && tokenRefreshHandler
+      ) {
+        config._authRetried = true
+        return tokenRefreshHandler().then((ok) => {
+          if (!ok) {
+            onUnauthorized?.()
+            if (!isAuthLoginPath()) redirectToLogin()
+            return Promise.reject(new ApiError('Authentication required', 401))
+          }
+          const token = resolveAuthToken()
+          if (token) {
+            config.headers.Authorization = `Bearer ${token}`
+          }
+          return instance.request(config)
+        })
+      }
+
       if (status === 401 && axiosError.config?.url !== '/auth/login') {
         onUnauthorized?.()
         if (!isAuthLoginPath()) {

@@ -6,16 +6,31 @@
  * - access token 自动刷新
  */
 import { getActivePinia } from 'pinia'
-import { apiClient, setTokenProvider, setUnauthorizedHandler } from './apiClient.js'
+import {
+  apiClient,
+  setTokenProvider,
+  setUnauthorizedHandler,
+  setTokenRefreshHandler,
+} from './apiClient.js'
 import { isShellEmbedded, redirectToLogin } from './authPaths.js'
 import { useAuthStore } from './stores/authStore.js'
 import type { AuthUser } from './authTypes.js'
+import { setSocketTokenProvider } from '../socket/index.js'
 
 export const ACCESS_TOKEN_KEY = 'sfp_access_token'
 export const REFRESH_TOKEN_KEY = 'sfp_refresh_token'
 export const SSO_CLIENT_ID_KEY = 'sfp_sso_client_id'
 
 export { isShellEmbedded, resolveLoginUrl, redirectToLogin } from './authPaths.js'
+
+export interface CapabilityAuthOptions {
+  /** 将 resolveAuthToken 注入子项目自有 fetch 客户端（如 aiApi） */
+  registerTokenProvider?: (getToken: () => string | null) => void
+  /** 覆盖默认 401 行为；未传则用 handleUnauthorized */
+  onUnauthorized?: () => void
+  /** 挂载后恢复会话并启动 refresh 调度，默认 true */
+  bootstrap?: boolean
+}
 
 let refreshTimer: ReturnType<typeof setTimeout> | null = null
 
@@ -138,10 +153,27 @@ export function handleUnauthorized(redirect?: string): void {
   redirectToLogin(redirect)
 }
 
-/** 子应用 bootstrap：注入 token 提供者 + 401 统一跳转 */
+/** 子应用 bootstrap：注入 token 提供者 + 401 统一跳转 + Socket + 可选 refresh 重试 */
 export function setupAppAuth(): void {
   setTokenProvider(() => resolveAuthToken())
   setUnauthorizedHandler(() => handleUnauthorized())
+  setTokenRefreshHandler(refreshAccessToken)
+}
+
+/**
+ * 三能力平台（editor / flow / ai）统一 JWT 初始化。
+ * 在 createPinia() 之后、挂载根组件之前调用。
+ */
+export function initCapabilityPlatformAuth(options: CapabilityAuthOptions = {}): void {
+  setupAppAuth()
+  setSocketTokenProvider(resolveAuthToken)
+  options.registerTokenProvider?.(resolveAuthToken)
+  if (options.onUnauthorized) {
+    setUnauthorizedHandler(options.onUnauthorized)
+  }
+  if (options.bootstrap !== false) {
+    void bootstrapAuthSession()
+  }
 }
 
 export type AuthRouteTarget = {

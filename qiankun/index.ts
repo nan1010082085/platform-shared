@@ -7,6 +7,7 @@
 export { useQiankun, initQiankunProps } from './useQiankun'
 export { useQiankunShell, initQiankunShellProps, resolveShellEmbedMode } from './useQiankunShell'
 export type { ShellEmbedMode } from './useQiankunShell'
+export { installSubAppRouteSync } from './syncSubAppRoute'
 export { useQiankunEvent, initQiankunLifecycle } from './useQiankunEvent'
 export { useMicroApp } from './useMicroApp'
 export { createQiankunApp } from './createQiankunApp'

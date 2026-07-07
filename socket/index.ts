@@ -38,6 +38,7 @@ export interface AiPublishedEvent {
 
 let socket: Socket | null = null
 let connected = false
+const connectionHandlers = new Set<(connected: boolean) => void>()
 let tokenProvider: (() => string | null) | null = null
 let pendingTokenListener: (() => void) | null = null
 
@@ -63,6 +64,7 @@ function teardownSocket(): void {
   socket.disconnect()
   socket = null
   connected = false
+  notifyConnectionChange()
 }
 
 /** 根据当前页面路径解析 Socket.IO path（生产走 /schema-platform/ws） */
@@ -72,6 +74,21 @@ export function resolveSocketPath(explicit?: string): string {
     return '/schema-platform/ws'
   }
   return '/ws'
+}
+
+/** 订阅连接状态变化（立即回调当前状态） */
+export function onConnectionChange(handler: (connected: boolean) => void): () => void {
+  handler(connected)
+  connectionHandlers.add(handler)
+  return () => {
+    connectionHandlers.delete(handler)
+  }
+}
+
+function notifyConnectionChange(): void {
+  for (const handler of connectionHandlers) {
+    handler(connected)
+  }
 }
 
 /** 获取当前连接状态 */
@@ -127,11 +144,13 @@ export function connect(opts?: SocketConnectOptions): void {
   socket.on('connect', () => {
     connected = true
     console.log('[socket] connected')
+    notifyConnectionChange()
   })
 
   socket.on('disconnect', () => {
     connected = false
     console.log('[socket] disconnected')
+    notifyConnectionChange()
   })
 
   socket.on('connect_error', (err) => {
@@ -251,4 +270,55 @@ export function onChatEvent(handler: (data: ChatEvent) => void): () => void {
   if (!socket) return () => {}
   socket.on('chat:event', handler)
   return () => { socket?.off('chat:event', handler) }
+}
+
+// ---- Agent Workflow (WebSocket 执行进度) ----
+
+export interface WorkflowExecutionPayload {
+  id: string
+  workflowId: string
+  workflowName: string
+  status: string
+  nodeRecords?: unknown[]
+  streamingOutput?: {
+    nodeId: string
+    nodeType: string
+    text: string
+    updatedAt: string
+  } | null
+  error?: string
+  [key: string]: unknown
+}
+
+export interface WorkflowEvent {
+  executionId: string
+  execution: WorkflowExecutionPayload
+}
+
+/** 订阅工作流执行进度（需先 REST 启动执行并获得 executionId） */
+export function emitWorkflowSubscribe(data: { executionId: string }): void {
+  if (socket && connected) {
+    socket.emit('workflow:subscribe', data)
+  }
+}
+
+/** 取消订阅 */
+export function emitWorkflowUnsubscribe(data: { executionId: string }): void {
+  if (socket && connected) {
+    socket.emit('workflow:unsubscribe', data)
+  }
+}
+
+/** 监听工作流执行事件 */
+export function onWorkflowEvent(handler: (data: WorkflowEvent) => void): () => void {
+  if (!socket) return () => {}
+  socket.on('workflow:event', handler)
+  return () => { socket?.off('workflow:event', handler) }
+}
+
+/** 监听工作流错误 */
+export function onWorkflowError(handler: (data: { executionId?: string; message: string }) => void): () => void {
+  if (!socket) return () => {}
+  socket.on('workflow:error', handler)
+  return () => { socket?.off('workflow:error', handler) }
 }
