@@ -24,6 +24,8 @@ import Trophy from '@iconify-icons/ep/trophy'
 import Platform from '@iconify-icons/ep/platform'
 import Cpu from '@iconify-icons/ep/cpu'
 import ChatDotRound from '@iconify-icons/ep/chat-dot-round'
+import ChatLineRound from '@iconify-icons/ep/chat-line-round'
+import ChatSquare from '@iconify-icons/ep/chat-square'
 import Bell from '@iconify-icons/ep/bell'
 import PictureFilled from '@iconify-icons/ep/picture-filled'
 import Picture from '@iconify-icons/ep/picture'
@@ -138,6 +140,8 @@ export const ICON_MAP: Record<string, IconifyIcon> = {
   platform: Platform,
   cpu: Cpu,
   'chat-dot-round': ChatDotRound,
+  'chat-line-round': ChatLineRound,
+  'chat-square': ChatSquare,
   bell: Bell,
   'picture-filled': PictureFilled,
   picture: Picture,
