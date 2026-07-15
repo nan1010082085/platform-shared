@@ -128,7 +128,10 @@ instance.interceptors.response.use(
         return Promise.reject(new ApiError('Authentication required', 401))
       }
 
-      const message = (data as ApiResponse<unknown>)?.error?.message ?? (error instanceof Error ? error.message : 'Request failed')
+      const body = data as ApiResponse<unknown> | string | undefined
+      const message =
+        (typeof body === 'object' && body !== null ? body.error?.message : undefined)
+        ?? (error instanceof Error ? error.message : 'Request failed')
       return Promise.reject(new ApiError(message, status))
     }
 

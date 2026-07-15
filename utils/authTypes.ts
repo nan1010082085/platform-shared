@@ -46,7 +46,11 @@ export interface SSOConfig {
   clientId: string
   /** 授权完成后的回调地址，必须在服务端 redirectUris 中注册 */
   redirectUri: string
-  /** SSO 服务根地址，如 https://example.com */
+  /**
+   * SSO 服务根地址（origin 或带部署前缀）。
+   * SSOClient 会结合 VITE_API_BASE_URL 解析为可访问的 `/api/auth/sso/*`。
+   * 例：`https://pyflow.icu` → `https://pyflow.icu/schema-platform/api/auth/sso/...`
+   */
   ssoBaseUrl: string
 }
 

@@ -194,18 +194,21 @@ function switchMode(newMode: ViewMode) {
         @close="successMsg = null"
       />
 
-      <div :class="styles['login-form']">
+      <form :class="styles['login-form']" @submit.prevent="handleSubmit">
         <el-input
           v-if="mode !== 'changePassword'"
           v-model="form.username"
+          name="username"
+          autocomplete="username"
           placeholder="用户名"
           size="large"
-          @keyup.enter="handleSubmit"
         />
 
         <el-input
           v-if="mode === 'register'"
           v-model="form.nickname"
+          name="nickname"
+          autocomplete="nickname"
           placeholder="昵称（选填）"
           size="large"
         />
@@ -213,6 +216,8 @@ function switchMode(newMode: ViewMode) {
         <el-input
           v-if="mode === 'register'"
           v-model="form.phone"
+          name="tel"
+          autocomplete="tel"
           placeholder="手机号（选填）"
           size="large"
         />
@@ -220,39 +225,45 @@ function switchMode(newMode: ViewMode) {
         <el-input
           v-if="mode === 'changePassword'"
           v-model="form.oldPassword"
+          name="current-password"
+          type="password"
           show-password
+          autocomplete="current-password"
           placeholder="当前密码"
           size="large"
-          @keyup.enter="handleSubmit"
         />
 
         <el-input
           v-model="form.password"
+          name="password"
+          type="password"
           show-password
+          :autocomplete="mode === 'changePassword' || mode === 'register' ? 'new-password' : 'current-password'"
           :placeholder="mode === 'changePassword' ? '新密码' : '密码'"
           size="large"
-          @keyup.enter="handleSubmit"
         />
 
         <el-input
           v-if="mode !== 'login'"
           v-model="form.confirmPassword"
+          name="confirm-password"
+          type="password"
           show-password
+          autocomplete="new-password"
           placeholder="确认密码"
           size="large"
-          @keyup.enter="handleSubmit"
         />
 
         <el-button
           type="primary"
           size="large"
+          native-type="submit"
           :class="styles['login-button']"
           :loading="loading.login"
-          @click="handleSubmit"
         >
           {{ mode === 'register' ? '注册' : mode === 'changePassword' ? '修改密码' : '登录' }}
         </el-button>
-      </div>
+      </form>
 
       <div :class="styles['login-links']">
         <template v-if="mode === 'login'">

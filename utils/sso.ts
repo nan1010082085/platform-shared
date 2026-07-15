@@ -49,15 +49,51 @@ export class SSOError extends Error {
   }
 }
 
+/**
+ * 将 SSO 配置根地址解析为 API root（含 `/api`）。
+ * 生产 nginx 仅暴露 `/schema-platform/api`，不能打到裸 `/api`。
+ */
+export function resolveSsoApiRoot(ssoBaseUrl: string): string {
+  const trimmed = ssoBaseUrl.replace(/\/+$/, '')
+  if (/\/api$/i.test(trimmed)) return trimmed
+
+  const envApi = String(import.meta.env.VITE_API_BASE_URL || '/schema-platform/api').replace(/\/+$/, '')
+  if (/^https?:\/\//i.test(envApi)) return envApi
+
+  try {
+    const asUrl = new URL(trimmed)
+    const originOnly = trimmed === asUrl.origin || trimmed === `${asUrl.origin}/`
+    if (originOnly) {
+      return `${asUrl.origin}${envApi.startsWith('/') ? envApi : `/${envApi}`}`
+    }
+  } catch {
+    // ssoBaseUrl 不是绝对 URL 时走下方拼接
+  }
+
+  if (trimmed.endsWith('/schema-platform')) {
+    return `${trimmed}/api`
+  }
+
+  return `${trimmed}${envApi.startsWith('/') ? envApi : `/${envApi}`}`
+}
+
+/** 当前应用的 SSO redirect_uri（跟随 Vite BASE_URL） */
+export function resolveSsoRedirectUri(origin = window.location.origin): string {
+  const base = import.meta.env.BASE_URL || '/'
+  const normalized = base.endsWith('/') ? base : `${base}/`
+  return `${origin}${normalized}auth/callback`
+}
+
 export class SSOClient {
   private readonly clientId: string
   private readonly redirectUri: string
-  private readonly ssoBaseUrl: string
+  /** 完整 API root，如 https://host/schema-platform/api */
+  private readonly apiRoot: string
 
   constructor(config: SSOConfig) {
     this.clientId = config.clientId
     this.redirectUri = config.redirectUri
-    this.ssoBaseUrl = config.ssoBaseUrl.replace(/\/+$/, '')
+    this.apiRoot = resolveSsoApiRoot(config.ssoBaseUrl)
   }
 
   /**
@@ -65,7 +101,7 @@ export class SSOClient {
    * 用户在 SSO 端完成登录后会被重定向回 redirectUri，携带 code 和 state。
    */
   login(state?: string): void {
-    const url = new URL(`${this.ssoBaseUrl}/api/auth/sso/authorize`)
+    const url = new URL(`${this.apiRoot}/auth/sso/authorize`)
     url.searchParams.set('client_id', this.clientId)
     url.searchParams.set('redirect_uri', this.redirectUri)
     url.searchParams.set('response_type', 'code')
@@ -88,7 +124,7 @@ export class SSOClient {
       throw new SSOError('Authorization code not found in callback URL.', 400)
     }
 
-    const json = await this.request<ServerResponse<TokenResponse>>('/api/auth/sso/token', {
+    const json = await this.request<ServerResponse<TokenResponse>>('/auth/sso/token', {
       method: 'POST',
       body: {
         grant_type: 'authorization_code',
@@ -110,7 +146,7 @@ export class SSOClient {
    * 使用当前 refreshToken 获取新的 access + refresh token 对。
    */
   async refresh(refreshToken: string): Promise<TokenResponse> {
-    const json = await this.request<ServerResponse<TokenResponse>>('/api/auth/sso/refresh', {
+    const json = await this.request<ServerResponse<TokenResponse>>('/auth/sso/refresh', {
       method: 'POST',
       body: {
         grant_type: 'refresh_token',
@@ -131,7 +167,7 @@ export class SSOClient {
    * 基于浏览器 cookie 中的 SSO session，不依赖 accessToken。
    */
   async checkSession(): Promise<SSOSessionUser> {
-    const json = await this.request<ServerResponse<SSOSessionUser>>('/api/auth/sso/session')
+    const json = await this.request<ServerResponse<SSOSessionUser>>('/auth/sso/session')
 
     if (!json.success) {
       throw new SSOError(json.error?.message ?? 'No active session', 401, json.error?.details)
@@ -145,7 +181,7 @@ export class SSOClient {
    * @param all 是否销毁所有关联会话（当前实现仅销毁当前 session cookie）
    */
   async logout(all?: boolean): Promise<void> {
-    const json = await this.request<ServerResponse<null>>('/api/auth/sso/logout', {
+    const json = await this.request<ServerResponse<null>>('/auth/sso/logout', {
       method: 'POST',
       body: { all_sessions: all ?? false },
     })
@@ -170,12 +206,20 @@ export class SSOClient {
       body = JSON.stringify(options.body)
     }
 
-    const response = await fetch(`${this.ssoBaseUrl}${path}`, {
+    const response = await fetch(`${this.apiRoot}${path}`, {
       method,
       headers,
       body,
       credentials: 'include', // 携带 cookie（SSO session）
     })
+
+    const contentType = response.headers.get('content-type') ?? ''
+    if (!contentType.includes('application/json')) {
+      throw new SSOError(
+        `SSO endpoint returned non-JSON (${response.status}). Check API base path.`,
+        response.status,
+      )
+    }
 
     return response.json() as Promise<T>
   }
