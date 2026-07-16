@@ -9,6 +9,8 @@ export type AgentNodeType =
   | 'webhook-trigger'
   | 'document-parse'
   | 'vision-analyze'
+  | 'audio-transcribe'
+  | 'video-analyze'
   | 'conversation-memory'
   | 'llm'
   | ExpertNodeType
@@ -438,6 +440,23 @@ export function createDefaultNodeData(type: AgentNodeType): AgentWorkflowNodeDat
         label: '协作路由',
         detectCollaborationTool: true,
         maxCollaborationRounds: 3,
+      } as AgentWorkflowNodeData
+    case 'audio-transcribe':
+      return {
+        ...base,
+        label: '音频转录',
+        documentSource: 'stream',
+        streamField: 'file',
+        language: 'zh',
+      } as AgentWorkflowNodeData
+    case 'video-analyze':
+      return {
+        ...base,
+        label: '视频分析',
+        documentSource: 'stream',
+        streamField: 'file',
+        visionPrompt: '',
+        maxFrames: 10,
       } as AgentWorkflowNodeData
     default:
       return base
