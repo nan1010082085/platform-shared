@@ -75,7 +75,13 @@ export function useAuth() {
       store.setUserKey(res.user.id)
       scheduleRefresh(res.expiresIn)
 
-      const redirect = (route.query.redirect as string) || '/'
+      let redirect = (route.query.redirect as string) || '/'
+
+      // 避免路径重复：如果 redirect 以 router base 开头，去掉 base 前缀
+      const base = import.meta.env.BASE_URL || '/'
+      if (base !== '/' && redirect.startsWith(base)) {
+        redirect = redirect.slice(base.length - 1) // 保留开头的 /
+      }
 
       if (onSuccess) {
         onSuccess(redirect)
