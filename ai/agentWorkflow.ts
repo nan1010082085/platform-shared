@@ -751,12 +751,15 @@ export type AgentWorkflowTemplateId =
   | 'image-analysis'
   | 'chat-parity-assistant'
   | 'requirement-gated-build'
+  | 'cs-ticket-triage'
+  | 'cs-kb-reply'
+  | 'cs-sentiment-escalate'
 
 export interface AgentWorkflowTemplateMeta {
   id: AgentWorkflowTemplateId
   name: string
   description: string
-  category: 'general' | 'document' | 'assistant' | 'integration' | 'batch'
+  category: 'general' | 'document' | 'assistant' | 'integration' | 'batch' | 'customer-service'
   icon?: string
   tags?: string[]
 }
@@ -861,6 +864,30 @@ export const AGENT_WORKFLOW_TEMPLATES: AgentWorkflowTemplateMeta[] = [
     category: 'assistant',
     icon: 'checked',
     tags: ['requirement', 'gated', 'multi-step'],
+  },
+  {
+    id: 'cs-ticket-triage',
+    name: '客服工单智能分流',
+    description: 'Webhook/手动接收工单文本，LLM 分类为咨询/投诉/退款/技术，按优先级分流并输出 category、priority、suggestedTeam',
+    category: 'customer-service',
+    icon: 'message',
+    tags: ['customer-service', 'industry', 'triage'],
+  },
+  {
+    id: 'cs-kb-reply',
+    name: '客服知识库回复',
+    description: '手动触发后检索知识库，由 LLM 生成客服回复草稿',
+    category: 'customer-service',
+    icon: 'chat-dot-round',
+    tags: ['customer-service', 'industry', 'rag'],
+  },
+  {
+    id: 'cs-sentiment-escalate',
+    name: '情绪检测与升级',
+    description: 'Webhook 接收客户消息，LLM 情绪分析；负面情绪进入人工审核，否则直接结束',
+    category: 'customer-service',
+    icon: 'warning',
+    tags: ['customer-service', 'industry', 'hitl'],
   },
 ]
 
@@ -1277,10 +1304,209 @@ export function createAgentWorkflowGraphByTemplate(
       return createChatParityAssistantWorkflowGraph()
     case 'requirement-gated-build':
       return createRequirementGatedBuildWorkflowGraph()
+    case 'cs-ticket-triage':
+      return createCsTicketTriageWorkflowGraph()
+    case 'cs-kb-reply':
+      return createCsKbReplyWorkflowGraph()
+    case 'cs-sentiment-escalate':
+      return createCsSentimentEscalateWorkflowGraph()
     case 'blank':
     default:
       return createDefaultAgentWorkflowGraph()
   }
+}
+
+/** 客服工单智能分流：Webhook 接收工单 → LLM 分类 → 条件分流 → 结束 */
+export function createCsTicketTriageWorkflowGraph(): AgentWorkflowGraph {
+  return layoutAgentWorkflowGraph({
+    entryNodeId: 'webhook-1',
+    nodes: [
+      {
+        id: 'webhook-1',
+        type: 'webhook-trigger',
+        position: { x: 80, y: 200 },
+        data: {
+          label: '接收工单',
+          webhookPath: '/cs-ticket-triage',
+          webhookMethod: 'POST',
+        },
+      },
+      {
+        id: 'llm-1',
+        type: 'llm',
+        position: { x: 320, y: 200 },
+        data: {
+          label: '工单分类',
+          model: 'default',
+          systemPrompt:
+            '你是客服工单分流助手。根据工单文本判断类别、优先级与建议处理团队。\n\n类别 category 只能是：咨询、投诉、退款、技术。\n优先级 priority 只能是：high、medium、low。\nsuggestedTeam 为建议团队名称（如「售前咨询」「客诉专员」「退款组」「技术支持」）。\n\n输出 JSON：\n{\n  "category": "咨询|投诉|退款|技术",\n  "priority": "high|medium|low",\n  "suggestedTeam": "...",\n  "summary": "一句话摘要",\n  "needsSpecialist": true/false\n}\n\n投诉、退款或明确技术故障时 needsSpecialist=true。只输出 JSON。',
+          prompt:
+            '工单文本：\n{{$input.message}}\n\n请完成分流分类。',
+        },
+      },
+      {
+        id: 'if-1',
+        type: 'if',
+        position: { x: 560, y: 200 },
+        data: {
+          label: '是否需专员',
+          expression:
+            "lastOutput && (lastOutput.needsSpecialist === true || lastOutput.priority === 'high' || lastOutput.category === '投诉' || lastOutput.category === '退款')",
+        },
+      },
+      {
+        id: 'end-specialist',
+        type: 'end',
+        position: { x: 800, y: 120 },
+        data: {
+          label: '专员队列',
+          outputSource: 'node',
+          outputNodeId: 'llm-1',
+        },
+      },
+      {
+        id: 'end-general',
+        type: 'end',
+        position: { x: 800, y: 280 },
+        data: {
+          label: '普通队列',
+          outputSource: 'node',
+          outputNodeId: 'llm-1',
+        },
+      },
+    ],
+    edges: [
+      { id: 'e1', source: 'webhook-1', target: 'llm-1' },
+      { id: 'e2', source: 'llm-1', target: 'if-1' },
+      { id: 'e3', source: 'if-1', target: 'end-specialist', data: { branch: 'true' } },
+      { id: 'e4', source: 'if-1', target: 'end-general', data: { branch: 'false' } },
+    ],
+  })
+}
+
+/** 客服知识库回复：手动触发 → RAG 检索 → LLM 生成回复草稿 → 结束 */
+export function createCsKbReplyWorkflowGraph(): AgentWorkflowGraph {
+  return layoutAgentWorkflowGraph({
+    entryNodeId: 'trigger-1',
+    nodes: [
+      {
+        id: 'trigger-1',
+        type: 'manual-trigger',
+        position: { x: 80, y: 200 },
+        data: { label: '手动触发' },
+      },
+      {
+        id: 'rag-1',
+        type: 'tool',
+        position: { x: 320, y: 200 },
+        data: {
+          label: '知识库检索',
+          toolCategory: 'mcp-rag',
+          toolName: 'rag__search',
+          toolArgs: {
+            query: '{{$input.message}}',
+            limit: 5,
+          },
+        },
+      },
+      {
+        id: 'llm-1',
+        type: 'llm',
+        position: { x: 560, y: 200 },
+        data: {
+          label: '生成回复草稿',
+          model: 'default',
+          systemPrompt:
+            '你是客服回复助手。根据知识库检索结果，为客户问题起草专业、礼貌的中文回复草稿。若检索无相关内容，明确说明并给出可转人工的建议。只输出回复正文，不要附加元说明。',
+          prompt:
+            '客户问题：{{$input.message}}\n\n知识库检索结果：\n{{$node.rag-1}}\n\n请生成客服回复草稿。',
+        },
+      },
+      {
+        id: 'end-1',
+        type: 'end',
+        position: { x: 800, y: 200 },
+        data: { label: '结束' },
+      },
+    ],
+    edges: [
+      { id: 'e1', source: 'trigger-1', target: 'rag-1' },
+      { id: 'e2', source: 'rag-1', target: 'llm-1' },
+      { id: 'e3', source: 'llm-1', target: 'end-1' },
+    ],
+  })
+}
+
+/** 情绪检测与升级：Webhook 接收消息 → LLM 情绪分析 → 负面则 HITL，否则直接结束 */
+export function createCsSentimentEscalateWorkflowGraph(): AgentWorkflowGraph {
+  return layoutAgentWorkflowGraph({
+    entryNodeId: 'webhook-1',
+    nodes: [
+      {
+        id: 'webhook-1',
+        type: 'webhook-trigger',
+        position: { x: 80, y: 200 },
+        data: {
+          label: '接收消息',
+          webhookPath: '/cs-sentiment-escalate',
+          webhookMethod: 'POST',
+        },
+      },
+      {
+        id: 'llm-1',
+        type: 'llm',
+        position: { x: 320, y: 200 },
+        data: {
+          label: '情绪分析',
+          model: 'default',
+          systemPrompt:
+            '你是客服情绪分析助手。判断客户消息的情绪倾向与是否需要人工升级。\n\n输出 JSON：\n{\n  "sentiment": "positive|neutral|negative",\n  "score": 0.0-1.0,\n  "reason": "简要理由",\n  "needsEscalation": true/false\n}\n\nsentiment=negative 或出现强烈不满/威胁投诉时 needsEscalation=true。只输出 JSON。',
+          prompt: '客户消息：\n{{$input.message}}\n\n请分析情绪。',
+        },
+      },
+      {
+        id: 'if-1',
+        type: 'if',
+        position: { x: 560, y: 200 },
+        data: {
+          label: '是否负面升级',
+          expression:
+            "lastOutput && (lastOutput.needsEscalation === true || lastOutput.sentiment === 'negative')",
+        },
+      },
+      {
+        id: 'hitl-1',
+        type: 'hitl',
+        position: { x: 800, y: 120 },
+        data: {
+          label: '人工审核升级',
+          confirmMessage:
+            '检测到负面情绪（{{$node.llm-1.sentiment}}，score={{$node.llm-1.score}}）。原因：{{$node.llm-1.reason}}。请确认是否升级人工处理？',
+          confirmQuestions: [
+            { id: 'q1', question: '处理方式', options: ['升级人工', '自动安抚后关闭'], required: true },
+            { id: 'q2', question: '备注', required: false },
+          ],
+        },
+      },
+      {
+        id: 'end-1',
+        type: 'end',
+        position: { x: 800, y: 280 },
+        data: {
+          label: '结束',
+          outputSource: 'node',
+          outputNodeId: 'llm-1',
+        },
+      },
+    ],
+    edges: [
+      { id: 'e1', source: 'webhook-1', target: 'llm-1' },
+      { id: 'e2', source: 'llm-1', target: 'if-1' },
+      { id: 'e3', source: 'if-1', target: 'hitl-1', data: { branch: 'true' } },
+      { id: 'e4', source: 'if-1', target: 'end-1', data: { branch: 'false' } },
+      { id: 'e5', source: 'hitl-1', target: 'end-1' },
+    ],
+  })
 }
 
 /** 智能建议：收集上下文 → LLM 分析 → 条件判断 → HITL 确认 / 直接结束 */
