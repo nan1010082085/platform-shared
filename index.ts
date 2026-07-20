@@ -7,6 +7,10 @@ export * from './components/common/index'
 
 // Utils
 export { apiClient } from './utils/apiClient'
+export { createI18n, useI18n } from './utils/i18n'
+export type { CreateI18nOptions, LocaleMessages } from './utils/i18n'
+export { track, reportError, flush, initTelemetry } from './utils/telemetry'
+export type { TelemetryEvent, ErrorReport } from './utils/telemetry'
 export * from './utils/authTypes'
 export * from './utils/form'
 export * from './utils/iconResolver'
