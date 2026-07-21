@@ -104,7 +104,8 @@
     "./ai/*": {
       "types": "./dist/ai/*.d.ts",
       "import": "./dist/ai/*.js"
-    }
+    },
+    "./ai/metadata.json": "./ai/metadata.json"
   },
   "files": [
     "dist",

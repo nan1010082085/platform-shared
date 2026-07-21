@@ -29,6 +29,15 @@ export interface ProviderWithMaskedKey extends Provider {
 // Model（模型配置）
 // ────────────────────────────────────────────
 
+/**
+ * 模型能力类型。一个模型可具备多种能力，节点选模型时按能力过滤。
+ * - chat: 文本对话 / LLM 推理（默认）
+ * - image: 图像生成
+ * - video: 视频生成
+ * - audio: 音频转录 / 语音
+ */
+export type ModelCapability = 'chat' | 'image' | 'video' | 'audio'
+
 export interface ModelParameters {
   temperature?: number
   maxTokens?: number
@@ -42,6 +51,7 @@ export interface Model {
   providerId: string
   model: string
   parameters: ModelParameters
+  capabilities: ModelCapability[]
   isDefault: boolean
   isActive: boolean
   createdAt: string

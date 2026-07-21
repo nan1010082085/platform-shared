@@ -19,6 +19,7 @@ export type AgentNodeType =
   | 'hitl'
   | 'end'
   | 'image-generate'
+  | 'video-generate'
   | 'ppt-generate'
   | 'intent-router'
   | 'summarizer'
@@ -169,10 +170,29 @@ export interface AgentWorkflowNodeData {
 export interface ImageGenerateNodeData {
   label: string
   imagePrompt: string
-  imageModel: 'dall-e-3' | 'dall-e-2' | 'mimo-image'
+  /** 模型标识（来自模型中心配置，如 dall-e-3 / mimo-image / 自定义 id） */
+  imageModel: string
   imageSize: '1024x1024' | '1024x1792' | '1792x1024'
   imageStyle: 'natural' | 'vivid'
   imageQuality: 'standard' | 'hd'
+  /** 生成图片数量（1-10），默认 1 */
+  imageCount?: number
+}
+
+/** video-generate 节点：文生视频，节点内置异步轮询直到完成 */
+export interface VideoGenerateNodeData {
+  label: string
+  videoPrompt: string
+  /** 模型标识（来自模型中心，具备 video 能力的模型） */
+  videoModel: string
+  /** 视频时长（秒），典型 6-15s */
+  duration?: number
+  /** 分辨率 */
+  resolution?: '480p' | '720p' | '1080p'
+  /** 轮询间隔（毫秒），默认 5000 */
+  pollIntervalMs?: number
+  /** 最大轮询时长（毫秒），默认 300000（5 分钟） */
+  pollTimeoutMs?: number
 }
 
 /** 任务计划步骤（与 server 端 TaskPlanStep 对齐） */
@@ -457,6 +477,28 @@ export function createDefaultNodeData(type: AgentNodeType): AgentWorkflowNodeDat
         streamField: 'file',
         visionPrompt: '',
         maxFrames: 10,
+      } as AgentWorkflowNodeData
+    case 'image-generate':
+      return {
+        ...base,
+        label: '图片生成',
+        imagePrompt: '',
+        imageModel: '',
+        imageSize: '1024x1024',
+        imageStyle: 'vivid',
+        imageQuality: 'standard',
+        imageCount: 1,
+      } as AgentWorkflowNodeData
+    case 'video-generate':
+      return {
+        ...base,
+        label: '视频生成',
+        videoPrompt: '',
+        videoModel: '',
+        duration: 8,
+        resolution: '720p',
+        pollIntervalMs: 5000,
+        pollTimeoutMs: 300000,
       } as AgentWorkflowNodeData
     default:
       return base
@@ -754,12 +796,21 @@ export type AgentWorkflowTemplateId =
   | 'cs-ticket-triage'
   | 'cs-kb-reply'
   | 'cs-sentiment-escalate'
+  | 'excel-report'
+  | 'multi-doc-compare'
+  | 'structured-extract'
+  | 'webhook-batch-dispatch'
+  | 'content-compliance'
+  | 'contract-risk-tag'
+  | 'faq-quality-check'
+  | 'multimodal-image-text'
+  | 'multimodal-video-promo'
 
 export interface AgentWorkflowTemplateMeta {
   id: AgentWorkflowTemplateId
   name: string
   description: string
-  category: 'general' | 'document' | 'assistant' | 'integration' | 'batch' | 'customer-service'
+  category: 'general' | 'document' | 'assistant' | 'integration' | 'batch' | 'customer-service' | 'audit'
   icon?: string
   tags?: string[]
 }
@@ -889,9 +940,614 @@ export const AGENT_WORKFLOW_TEMPLATES: AgentWorkflowTemplateMeta[] = [
     icon: 'warning',
     tags: ['customer-service', 'industry', 'hitl'],
   },
+  {
+    id: 'excel-report',
+    name: 'Excel 报表洞察',
+    description: 'Webhook 接收 Excel/CSV 文件，解析后由 LLM 生成数据摘要、趋势洞察与异常提示',
+    category: 'batch',
+    icon: 'document',
+    tags: ['data', 'excel', 'report'],
+  },
+  {
+    id: 'multi-doc-compare',
+    name: '多文档对比',
+    description: '手动触发，结合会话记忆对多份文档进行差异对比、一致性检查与合并建议',
+    category: 'document',
+    icon: 'document',
+    tags: ['document', 'compare'],
+  },
+  {
+    id: 'structured-extract',
+    name: '结构化字段提取',
+    description: 'Webhook 接收文档，解析后由 LLM 按指定 schema 提取字段并输出 JSON，便于下游系统消费',
+    category: 'document',
+    icon: 'document',
+    tags: ['document', 'extract', 'json'],
+  },
+  {
+    id: 'webhook-batch-dispatch',
+    name: '批量任务分发',
+    description: 'Webhook 接收批量任务，任务规划拆解 -> 任务链逐步执行 -> 摘要汇总结果',
+    category: 'integration',
+    icon: 'connection',
+    tags: ['integration', 'batch', 'task-chain'],
+  },
+  {
+    id: 'content-compliance',
+    name: '内容合规审查',
+    description: 'Webhook 接收内容，LLM 合规审查；命中违规进入人工审核，否则直接放行',
+    category: 'audit',
+    icon: 'warning',
+    tags: ['audit', 'compliance', 'hitl'],
+  },
+  {
+    id: 'contract-risk-tag',
+    name: '合同风险标注',
+    description: '手动触发上传合同，解析后由 LLM 标注风险等级与条款，再经人工确认输出终稿',
+    category: 'audit',
+    icon: 'warning',
+    tags: ['audit', 'contract', 'risk', 'hitl'],
+  },
+  {
+    id: 'faq-quality-check',
+    name: 'FAQ 质检',
+    description: 'Webhook 接收 FAQ 条目，LLM 检查准确性与完整性；不合格进入人工复核',
+    category: 'audit',
+    icon: 'warning',
+    tags: ['audit', 'faq', 'quality', 'hitl'],
+  },
+  {
+    id: 'multimodal-image-text',
+    name: '图文批量生成',
+    description: 'LLM 生成文案与配图 prompt -> 图片生成节点产出多张配图，组合为图文素材',
+    category: 'general',
+    icon: 'picture',
+    tags: ['multimodal', 'image', 'batch'],
+  },
+  {
+    id: 'multimodal-video-promo',
+    name: '视频营销生成',
+    description: 'LLM 生成视频脚本 -> 视频生成节点产出短视频，适合营销/宣传素材快速生产',
+    category: 'general',
+    icon: 'video-play',
+    tags: ['multimodal', 'video', 'marketing'],
+  },
 ]
 
+/** Excel 报表洞察：Webhook 接收 Excel/CSV -> 解析 -> LLM 生成摘要与洞察 -> 结束 */
+export function createExcelReportWorkflowGraph(): AgentWorkflowGraph {
+  return layoutAgentWorkflowGraph({
+    entryNodeId: 'webhook-1',
+    nodes: [
+      {
+        id: 'webhook-1',
+        type: 'webhook-trigger',
+        position: { x: 80, y: 200 },
+        data: {
+          label: 'Webhook 触发',
+          webhookPath: '/excel-report',
+          webhookMethod: 'POST',
+        },
+      },
+      {
+        id: 'parse-1',
+        type: 'document-parse',
+        position: { x: 320, y: 200 },
+        data: {
+          label: 'Excel/CSV 解析',
+          documentSource: 'stream',
+          streamField: 'file',
+        },
+      },
+      {
+        id: 'llm-1',
+        type: 'llm',
+        position: { x: 560, y: 200 },
+        data: {
+          label: '报表洞察生成',
+          model: 'default',
+          systemPrompt:
+            '你是数据分析专家。基于解析后的表格文本，生成数据摘要、关键趋势、异常点与行动建议。\n\n输出 JSON：\n{\n  "summary": "整体摘要",\n  "metrics": [{"name": "", "value": "", "trend": "up|down|flat"}],\n  "anomalies": [],\n  "recommendations": []\n}\n只输出 JSON，不要 markdown 代码块。',
+          prompt:
+            '文件名：{{$node.parse-1.filename}}\n\n表格内容：\n{{$node.parse-1.text}}\n\n请生成报表洞察。',
+        },
+      },
+      {
+        id: 'end-1',
+        type: 'end',
+        position: { x: 800, y: 200 },
+        data: { label: '结束' },
+      },
+    ],
+    edges: [
+      { id: 'e1', source: 'webhook-1', target: 'parse-1' },
+      { id: 'e2', source: 'parse-1', target: 'llm-1' },
+      { id: 'e3', source: 'llm-1', target: 'end-1' },
+    ],
+  })
+}
+
+/** 多文档对比：手动触发 -> 会话记忆 -> LLM 差异对比 -> 结束 */
+export function createMultiDocCompareWorkflowGraph(): AgentWorkflowGraph {
+  return layoutAgentWorkflowGraph({
+    entryNodeId: 'trigger-1',
+    nodes: [
+      {
+        id: 'trigger-1',
+        type: 'manual-trigger',
+        position: { x: 80, y: 200 },
+        data: { label: '手动触发' },
+      },
+      {
+        id: 'memory-1',
+        type: 'conversation-memory',
+        position: { x: 320, y: 200 },
+        data: {
+          label: '会话记忆',
+          memoryMode: 'append',
+        },
+      },
+      {
+        id: 'llm-1',
+        type: 'llm',
+        position: { x: 560, y: 200 },
+        data: {
+          label: '多文档对比',
+          model: 'default',
+          useConversationHistory: true,
+          appendAssistantReply: true,
+          systemPrompt:
+            '你是文档对比专家。基于会话中累积的多份文档内容，输出差异对比、一致性检查与合并建议。\n\n输出 JSON：\n{\n  "differences": [{"topic": "", "docA": "", "docB": "", "conflict": true|false}],\n  "consistencyIssues": [],\n  "mergeSuggestions": []\n}\n只输出 JSON。',
+          prompt:
+            '当前输入：{{$input.message}}\n\n请结合历史文档进行多文档对比分析。',
+        },
+      },
+      {
+        id: 'end-1',
+        type: 'end',
+        position: { x: 800, y: 200 },
+        data: { label: '结束' },
+      },
+    ],
+    edges: [
+      { id: 'e1', source: 'trigger-1', target: 'memory-1' },
+      { id: 'e2', source: 'memory-1', target: 'llm-1' },
+      { id: 'e3', source: 'llm-1', target: 'end-1' },
+    ],
+  })
+}
+
+/** 结构化字段提取：Webhook -> 解析 -> LLM 按 schema 提取 JSON -> 结束 */
+export function createStructuredExtractWorkflowGraph(): AgentWorkflowGraph {
+  return layoutAgentWorkflowGraph({
+    entryNodeId: 'webhook-1',
+    nodes: [
+      {
+        id: 'webhook-1',
+        type: 'webhook-trigger',
+        position: { x: 80, y: 200 },
+        data: {
+          label: 'Webhook 触发',
+          webhookPath: '/structured-extract',
+          webhookMethod: 'POST',
+        },
+      },
+      {
+        id: 'parse-1',
+        type: 'document-parse',
+        position: { x: 320, y: 200 },
+        data: {
+          label: '文档解析',
+          documentSource: 'stream',
+          streamField: 'file',
+        },
+      },
+      {
+        id: 'llm-1',
+        type: 'llm',
+        position: { x: 560, y: 200 },
+        data: {
+          label: '字段结构化提取',
+          model: 'default',
+          systemPrompt:
+            '你是信息提取专家。从文档中按指定字段提取结构化数据，输出 JSON 对象。字段缺失时填 null，不要编造。只输出 JSON，不要 markdown 代码块。',
+          prompt:
+            '文件名：{{$node.parse-1.filename}}\n\n文档内容：\n{{$node.parse-1.text}}\n\n提取字段 schema：{{$input.schema}}\n\n请输出结构化 JSON。',
+        },
+      },
+      {
+        id: 'end-1',
+        type: 'end',
+        position: { x: 800, y: 200 },
+        data: { label: '结束' },
+      },
+    ],
+    edges: [
+      { id: 'e1', source: 'webhook-1', target: 'parse-1' },
+      { id: 'e2', source: 'parse-1', target: 'llm-1' },
+      { id: 'e3', source: 'llm-1', target: 'end-1' },
+    ],
+  })
+}
+
+/** 批量任务分发：Webhook -> 任务规划 -> 任务链 -> 摘要汇总 -> 结束 */
+export function createWebhookBatchDispatchWorkflowGraph(): AgentWorkflowGraph {
+  return layoutAgentWorkflowGraph({
+    entryNodeId: 'webhook-1',
+    nodes: [
+      {
+        id: 'webhook-1',
+        type: 'webhook-trigger',
+        position: { x: 80, y: 200 },
+        data: {
+          label: 'Webhook 触发',
+          webhookPath: '/batch-dispatch',
+          webhookMethod: 'POST',
+        },
+      },
+      {
+        id: 'task-planner-1',
+        type: 'task-planner',
+        position: { x: 320, y: 200 },
+        data: {
+          label: '任务规划',
+          inputSource: 'message',
+          maxSteps: 8,
+          strategy: 'sequential',
+          model: 'default',
+        },
+      },
+      {
+        id: 'task-chain-1',
+        type: 'task-chain',
+        position: { x: 560, y: 200 },
+        data: {
+          label: '任务链执行',
+          chainSource: 'upstream',
+          staticChain: [],
+          onStepOutput: '',
+        },
+      },
+      {
+        id: 'summarizer-1',
+        type: 'summarizer',
+        position: { x: 800, y: 200 },
+        data: {
+          label: '结果汇总',
+          summarySource: 'taskChain',
+          customPrompt: '',
+          stream: false,
+          model: 'default',
+        },
+      },
+      {
+        id: 'end-1',
+        type: 'end',
+        position: { x: 1040, y: 200 },
+        data: { label: '结束' },
+      },
+    ],
+    edges: [
+      { id: 'e1', source: 'webhook-1', target: 'task-planner-1' },
+      { id: 'e2', source: 'task-planner-1', target: 'task-chain-1' },
+      { id: 'e3', source: 'task-chain-1', target: 'summarizer-1' },
+      { id: 'e4', source: 'summarizer-1', target: 'end-1' },
+    ],
+  })
+}
+
+/** 内容合规审查：Webhook -> LLM 合规审查 -> if 违规 -> HITL / 直接结束 */
+export function createContentComplianceWorkflowGraph(): AgentWorkflowGraph {
+  return layoutAgentWorkflowGraph({
+    entryNodeId: 'webhook-1',
+    nodes: [
+      {
+        id: 'webhook-1',
+        type: 'webhook-trigger',
+        position: { x: 80, y: 200 },
+        data: {
+          label: '接收内容',
+          webhookPath: '/content-compliance',
+          webhookMethod: 'POST',
+        },
+      },
+      {
+        id: 'llm-1',
+        type: 'llm',
+        position: { x: 320, y: 200 },
+        data: {
+          label: '合规审查',
+          model: 'default',
+          systemPrompt:
+            '你是内容合规审查员。判断内容是否违反法律法规、平台政策或品牌规范。\n\n输出 JSON：\n{\n  "compliant": true|false,\n  "violations": [{"type": "law|policy|brand", "detail": ""}],\n  "severity": "none|low|medium|high",\n  "suggestion": ""\n}\n只输出 JSON。',
+          prompt: '待审查内容：\n{{$input.content}}\n\n请进行合规审查。',
+        },
+      },
+      {
+        id: 'if-1',
+        type: 'if',
+        position: { x: 560, y: 200 },
+        data: {
+          label: '是否违规',
+          expression: 'lastOutput && lastOutput.compliant === false',
+        },
+      },
+      {
+        id: 'hitl-1',
+        type: 'hitl',
+        position: { x: 800, y: 120 },
+        data: {
+          label: '人工审核',
+          confirmMessage:
+            '检测到合规风险（severity={{$node.llm-1.severity}}）。违规项：{{$node.llm-1.violations}}。请确认处理方式。',
+          confirmQuestions: [
+            { id: 'q1', question: '处理方式', options: ['驳回', '放行', '改写后放行'], required: true },
+            { id: 'q2', question: '备注', required: false },
+          ],
+        },
+      },
+      {
+        id: 'end-1',
+        type: 'end',
+        position: { x: 800, y: 280 },
+        data: {
+          label: '结束',
+          outputSource: 'node',
+          outputNodeId: 'llm-1',
+        },
+      },
+    ],
+    edges: [
+      { id: 'e1', source: 'webhook-1', target: 'llm-1' },
+      { id: 'e2', source: 'llm-1', target: 'if-1' },
+      { id: 'e3', source: 'if-1', target: 'hitl-1', data: { branch: 'true' } },
+      { id: 'e4', source: 'if-1', target: 'end-1', data: { branch: 'false' } },
+      { id: 'e5', source: 'hitl-1', target: 'end-1' },
+    ],
+  })
+}
+
+/** 合同风险标注：手动触发 -> 解析 -> LLM 风险标注 -> HITL 确认 -> 结束 */
+export function createContractRiskTagWorkflowGraph(): AgentWorkflowGraph {
+  return layoutAgentWorkflowGraph({
+    entryNodeId: 'trigger-1',
+    nodes: [
+      {
+        id: 'trigger-1',
+        type: 'manual-trigger',
+        position: { x: 80, y: 200 },
+        data: { label: '手动触发' },
+      },
+      {
+        id: 'parse-1',
+        type: 'document-parse',
+        position: { x: 320, y: 200 },
+        data: {
+          label: '合同解析',
+          documentSource: 'stream',
+          streamField: 'file',
+        },
+      },
+      {
+        id: 'llm-1',
+        type: 'llm',
+        position: { x: 560, y: 200 },
+        data: {
+          label: '风险标注',
+          model: 'default',
+          systemPrompt:
+            '你是合同风险分析专家。识别合同中的风险条款并标注等级。\n\n输出 JSON：\n{\n  "overallRisk": "low|medium|high",\n  "clauses": [{"clause": "", "riskLevel": "low|medium|high", "issue": ""}],\n  "recommendations": []\n}\n只输出 JSON。',
+          prompt:
+            '文件名：{{$node.parse-1.filename}}\n\n合同正文：\n{{$node.parse-1.text}}\n\n请标注风险条款。',
+        },
+      },
+      {
+        id: 'hitl-1',
+        type: 'hitl',
+        position: { x: 800, y: 200 },
+        data: {
+          label: '人工确认',
+          confirmMessage:
+            '整体风险等级：{{$node.llm-1.overallRisk}}。请确认风险标注并决定是否放行。',
+          confirmQuestions: [
+            { id: 'q1', question: '处理方式', options: ['放行', '退回修改', '升级法务'], required: true },
+            { id: 'q2', question: '备注', required: false },
+          ],
+        },
+      },
+      {
+        id: 'end-1',
+        type: 'end',
+        position: { x: 1040, y: 200 },
+        data: { label: '结束' },
+      },
+    ],
+    edges: [
+      { id: 'e1', source: 'trigger-1', target: 'parse-1' },
+      { id: 'e2', source: 'parse-1', target: 'llm-1' },
+      { id: 'e3', source: 'llm-1', target: 'hitl-1' },
+      { id: 'e4', source: 'hitl-1', target: 'end-1' },
+    ],
+  })
+}
+
+/** FAQ 质检：Webhook -> LLM 质检 -> if 不合格 -> HITL / 直接结束 */
+export function createFaqQualityCheckWorkflowGraph(): AgentWorkflowGraph {
+  return layoutAgentWorkflowGraph({
+    entryNodeId: 'webhook-1',
+    nodes: [
+      {
+        id: 'webhook-1',
+        type: 'webhook-trigger',
+        position: { x: 80, y: 200 },
+        data: {
+          label: '接收 FAQ',
+          webhookPath: '/faq-quality-check',
+          webhookMethod: 'POST',
+        },
+      },
+      {
+        id: 'llm-1',
+        type: 'llm',
+        position: { x: 320, y: 200 },
+        data: {
+          label: 'FAQ 质检',
+          model: 'default',
+          systemPrompt:
+            '你是 FAQ 质检员。检查问答对的准确性、完整性与表述清晰度。\n\n输出 JSON：\n{\n  "passed": true|false,\n  "accuracy": 0.0-1.0,\n  "completeness": 0.0-1.0,\n  "clarity": 0.0-1.0,\n  "issues": [],\n  "suggestedAnswer": ""\n}\n存在明显问题或任一维度低于 0.6 时 passed=false。只输出 JSON。',
+          prompt: 'FAQ 条目：\n{{$input.faq}}\n\n请进行质检。',
+        },
+      },
+      {
+        id: 'if-1',
+        type: 'if',
+        position: { x: 560, y: 200 },
+        data: {
+          label: '是否合格',
+          expression: 'lastOutput && lastOutput.passed === false',
+        },
+      },
+      {
+        id: 'hitl-1',
+        type: 'hitl',
+        position: { x: 800, y: 120 },
+        data: {
+          label: '人工复核',
+          confirmMessage:
+            'FAQ 质检未通过（accuracy={{$node.llm-1.accuracy}}）。问题：{{$node.llm-1.issues}}。建议答案：{{$node.llm-1.suggestedAnswer}}',
+          confirmQuestions: [
+            { id: 'q1', question: '处理方式', options: ['采纳建议', '人工改写', '驳回'], required: true },
+            { id: 'q2', question: '备注', required: false },
+          ],
+        },
+      },
+      {
+        id: 'end-1',
+        type: 'end',
+        position: { x: 800, y: 280 },
+        data: {
+          label: '结束',
+          outputSource: 'node',
+          outputNodeId: 'llm-1',
+        },
+      },
+    ],
+    edges: [
+      { id: 'e1', source: 'webhook-1', target: 'llm-1' },
+      { id: 'e2', source: 'llm-1', target: 'if-1' },
+      { id: 'e3', source: 'if-1', target: 'hitl-1', data: { branch: 'true' } },
+      { id: 'e4', source: 'if-1', target: 'end-1', data: { branch: 'false' } },
+      { id: 'e5', source: 'hitl-1', target: 'end-1' },
+    ],
+  })
+}
+
+
 /** 合同条款提取：Webhook 接收合同文档 → 解析 → LLM 结构化提取 → 结束 */
+/** 图文批量生成：手动触发 -> LLM 生成文案+图片 prompt -> 图片生成(多张) -> 结束 */
+export function createMultimodalImageTextWorkflowGraph(): AgentWorkflowGraph {
+  return layoutAgentWorkflowGraph({
+    entryNodeId: 'trigger-1',
+    nodes: [
+      {
+        id: 'trigger-1',
+        type: 'manual-trigger',
+        position: { x: 80, y: 200 },
+        data: { label: '手动触发' },
+      },
+      {
+        id: 'llm-1',
+        type: 'llm',
+        position: { x: 320, y: 200 },
+        data: {
+          label: '文案+配图 prompt 生成',
+          model: 'default',
+          systemPrompt:
+            '你是内容营销专家。根据用户需求生成一篇图文素材：包含正文文案和配图 prompt。\n\n输出 JSON：\n{\n  "title": "标题",\n  "body": "正文文案",\n  "imagePrompts": ["配图1的描述", "配图2的描述", "配图3的描述"]\n}\nimagePrompts 生成 2-4 条，每条描述一个画面。只输出 JSON。',
+          prompt: '用户需求：{{$input.message}}\n\n请生成图文素材。',
+        },
+      },
+      {
+        id: 'image-1',
+        type: 'image-generate',
+        position: { x: 560, y: 200 },
+        data: {
+          label: '批量配图生成',
+          imagePrompt: '{{$node.llm-1.imagePrompts}}',
+          imageModel: '',
+          imageSize: '1024x1024',
+          imageStyle: 'vivid',
+          imageQuality: 'standard',
+          imageCount: 3,
+        },
+      },
+      {
+        id: 'end-1',
+        type: 'end',
+        position: { x: 800, y: 200 },
+        data: { label: '结束' },
+      },
+    ],
+    edges: [
+      { id: 'e1', source: 'trigger-1', target: 'llm-1' },
+      { id: 'e2', source: 'llm-1', target: 'image-1' },
+      { id: 'e3', source: 'image-1', target: 'end-1' },
+    ],
+  })
+}
+
+/** 视频营销生成：手动触发 -> LLM 生成视频脚本 -> 视频生成 -> 结束 */
+export function createMultimodalVideoPromoWorkflowGraph(): AgentWorkflowGraph {
+  return layoutAgentWorkflowGraph({
+    entryNodeId: 'trigger-1',
+    nodes: [
+      {
+        id: 'trigger-1',
+        type: 'manual-trigger',
+        position: { x: 80, y: 200 },
+        data: { label: '手动触发' },
+      },
+      {
+        id: 'llm-1',
+        type: 'llm',
+        position: { x: 320, y: 200 },
+        data: {
+          label: '视频脚本生成',
+          model: 'default',
+          systemPrompt:
+            '你是视频脚本编剧。根据用户需求生成一段 6-15 秒短视频的画面描述脚本，适合营销/宣传。\n\n输出 JSON：\n{\n  "title": "视频标题",\n  "videoPrompt": "详细的画面描述，包含场景、主体、动作、氛围",\n  "duration": 8\n}\nduration 取 6-15 之间的整数。只输出 JSON。',
+          prompt: '用户需求：{{$input.message}}\n\n请生成视频脚本。',
+        },
+      },
+      {
+        id: 'video-1',
+        type: 'video-generate',
+        position: { x: 560, y: 200 },
+        data: {
+          label: '视频生成',
+          videoPrompt: '{{$node.llm-1.videoPrompt}}',
+          videoModel: '',
+          duration: 8,
+          resolution: '720p',
+          pollIntervalMs: 5000,
+          pollTimeoutMs: 300000,
+        },
+      },
+      {
+        id: 'end-1',
+        type: 'end',
+        position: { x: 800, y: 200 },
+        data: { label: '结束' },
+      },
+    ],
+    edges: [
+      { id: 'e1', source: 'trigger-1', target: 'llm-1' },
+      { id: 'e2', source: 'llm-1', target: 'video-1' },
+      { id: 'e3', source: 'video-1', target: 'end-1' },
+    ],
+  })
+}
+
 export function createContractExtractWorkflowGraph(): AgentWorkflowGraph {
   return layoutAgentWorkflowGraph({
     entryNodeId: 'webhook-1',
@@ -1310,6 +1966,24 @@ export function createAgentWorkflowGraphByTemplate(
       return createCsKbReplyWorkflowGraph()
     case 'cs-sentiment-escalate':
       return createCsSentimentEscalateWorkflowGraph()
+    case 'excel-report':
+      return createExcelReportWorkflowGraph()
+    case 'multi-doc-compare':
+      return createMultiDocCompareWorkflowGraph()
+    case 'structured-extract':
+      return createStructuredExtractWorkflowGraph()
+    case 'webhook-batch-dispatch':
+      return createWebhookBatchDispatchWorkflowGraph()
+    case 'content-compliance':
+      return createContentComplianceWorkflowGraph()
+    case 'contract-risk-tag':
+      return createContractRiskTagWorkflowGraph()
+    case 'faq-quality-check':
+      return createFaqQualityCheckWorkflowGraph()
+    case 'multimodal-image-text':
+      return createMultimodalImageTextWorkflowGraph()
+    case 'multimodal-video-promo':
+      return createMultimodalVideoPromoWorkflowGraph()
     case 'blank':
     default:
       return createDefaultAgentWorkflowGraph()
