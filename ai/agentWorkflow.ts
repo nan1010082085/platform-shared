@@ -27,6 +27,7 @@ export type AgentNodeType =
   | 'task-planner'
   | 'task-chain'
   | 'collaboration-router'
+  | 'agent-loop'
 
 export type AgentWorkflowStatus = 'draft' | 'published' | 'archived'
 
@@ -163,6 +164,19 @@ export interface AgentWorkflowNodeData {
   /** collaboration-router */
   detectCollaborationTool?: boolean
   maxCollaborationRounds?: number
+  /** agent-loop：LLM 自主循环调工具，让 workflow 段落具备智能体能力 */
+  /** 可用工具名列表（对应图内 tool 节点声明的工具名，或已注册的 langgraph 工具） */
+  agentLoopTools?: string[]
+  /** 最大自主迭代次数（硬上限，防止失控），默认 8 */
+  agentLoopMaxIterations?: number
+  /** agent-loop 系统提示（角色/约束），默认通用助手 */
+  agentLoopSystemPrompt?: string
+  /** agent-loop 输入来源：message=工作流输入 message，lastOutput=上游节点输出，custom=自定义 */
+  agentLoopInputSource?: 'message' | 'lastOutput' | 'custom'
+  /** agentLoopInputSource=custom 时的模板 */
+  agentLoopInputTemplate?: string
+  /** agent-loop 工具调用总次数硬上限（防 token 失控），默认 50 */
+  agentLoopMaxToolInvocations?: number
   notes?: string
 }
 
@@ -296,6 +310,8 @@ export interface AgentWorkflowSummary {
   publishId: string | null
   /** 已发布版本号 (yyyymmddhhmmss) */
   publishedVersion: string | null
+  /** 可路由关键词：chat 意图匹配时建议使用此工作流 */
+  routingKeywords?: string[]
   /** 是否有执行中的实例 */
   hasRunningExecution: boolean
   updatedAt: string
@@ -499,6 +515,17 @@ export function createDefaultNodeData(type: AgentNodeType): AgentWorkflowNodeDat
         resolution: '720p',
         pollIntervalMs: 5000,
         pollTimeoutMs: 300000,
+      } as AgentWorkflowNodeData
+    case 'agent-loop':
+      return {
+        ...base,
+        label: '智能体循环',
+        model: 'default',
+        agentLoopTools: [],
+        agentLoopMaxIterations: 8,
+        agentLoopSystemPrompt: '你是一个自主智能体，根据用户请求调用可用工具完成任务。每次思考后选择一个工具调用，获得结果后继续，直到任务完成时直接给出最终回答（不要调用工具）。',
+        agentLoopInputSource: 'message',
+        agentLoopInputTemplate: '',
       } as AgentWorkflowNodeData
     default:
       return base
@@ -2999,6 +3026,15 @@ export function validateAgentWorkflowGraph(graph: AgentWorkflowGraph): AgentWork
       const d = node.data as CollaborationRouterNodeData
       if (d.maxCollaborationRounds < 1) {
         issues.push({ level: 'error', nodeId: node.id, message: '协作路由节点最大轮次不能小于 1' })
+      }
+    }
+    if (node.type === 'agent-loop') {
+      const d = node.data as AgentWorkflowNodeData
+      if (!d.agentLoopTools || d.agentLoopTools.length === 0) {
+        issues.push({ level: 'warning', nodeId: node.id, message: '智能体循环未选择可用工具，将退化为单轮 LLM 回答' })
+      }
+      if ((d.agentLoopMaxIterations ?? 8) < 1) {
+        issues.push({ level: 'error', nodeId: node.id, message: '智能体循环最大迭代次数不能小于 1' })
       }
     }
   }

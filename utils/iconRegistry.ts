@@ -42,6 +42,8 @@ import View from '@iconify-icons/ep/view'
 import Check from '@iconify-icons/ep/check'
 import Close from '@iconify-icons/ep/close'
 import Warning from '@iconify-icons/ep/warning'
+import WarningFilled from '@iconify-icons/ep/warning-filled'
+import Filter from '@iconify-icons/ep/filter'
 import InfoFilled from '@iconify-icons/ep/info-filled'
 import SuccessFilled from '@iconify-icons/ep/success-filled'
 import ArrowRight from '@iconify-icons/ep/arrow-right'
@@ -158,6 +160,8 @@ export const ICON_MAP: Record<string, IconifyIcon> = {
   check: Check,
   close: Close,
   warning: Warning,
+  'warning-filled': WarningFilled,
+  filter: Filter,
   'info-filled': InfoFilled,
   'success-filled': SuccessFilled,
   success: SuccessFilled,
