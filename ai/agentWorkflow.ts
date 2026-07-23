@@ -30,6 +30,7 @@ export type AgentNodeType =
   | 'agent-loop'
   | 'code-execute'
   | 'variable-set'
+  | 'switch'
 
 export type AgentWorkflowStatus = 'draft' | 'published' | 'archived'
 
@@ -186,6 +187,8 @@ export interface AgentWorkflowNodeData {
   variableName?: string
   variableValue?: string
   variableMode?: 'set' | 'append' | 'increment'
+  /** switch: 多路条件分支 */
+  switchBranches?: Array<{ label: string; expression: string }>
   notes?: string
 }
 
@@ -550,6 +553,15 @@ export function createDefaultNodeData(type: AgentNodeType): AgentWorkflowNodeDat
         variableName: 'myVar',
         variableValue: '{{$input.message}}',
         variableMode: 'set',
+      } as AgentWorkflowNodeData
+    case 'switch':
+      return {
+        ...base,
+        label: '多路分支',
+        switchBranches: [
+          { label: '分支A', expression: 'true' },
+          { label: '分支B', expression: 'false' },
+        ],
       } as AgentWorkflowNodeData
     default:
       return base
