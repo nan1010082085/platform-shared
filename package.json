@@ -138,10 +138,12 @@
   "devDependencies": {
     "@types/node": "^26.0.1",
     "@vitejs/plugin-vue": "^5.2.3",
+    "jsdom": "^26.1.0",
     "sass-embedded": "^1.100.0",
     "typescript": "~5.7.3",
     "vite": "^6.3.2",
     "vite-plugin-dts": "^5.0.3",
+    "vitest": "^3.2.1",
     "vue-tsc": "^2.2.0"
   },
   "peerDependencies": {

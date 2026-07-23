@@ -1,6 +1,3 @@
-/**
- * @vitest-environment node
- */
 import { describe, it, expect, beforeEach, vi } from 'vitest'
 
 const storage = new Map<string, string>()
@@ -11,29 +8,29 @@ vi.stubGlobal('localStorage', {
   removeItem: (k: string) => { storage.delete(k) },
 })
 
-vi.mock('../socket/index.js', () => ({
+vi.mock('../socket/index.ts', () => ({
   setSocketTokenProvider: vi.fn(),
 }))
 
-vi.mock('./apiClient.js', () => ({
+vi.mock('../utils/apiClient.ts', () => ({
   apiClient: { get: vi.fn(), post: vi.fn() },
   setTokenProvider: vi.fn(),
   setUnauthorizedHandler: vi.fn(),
   setTokenRefreshHandler: vi.fn(),
 }))
 
-import { setSocketTokenProvider } from '../socket/index.js'
+import { setSocketTokenProvider } from '../socket/index.ts'
 import {
   setTokenProvider,
   setUnauthorizedHandler,
   setTokenRefreshHandler,
-} from './apiClient.js'
+} from '../utils/apiClient.ts'
 import {
   initCapabilityPlatformAuth,
   resolveAuthToken,
   ACCESS_TOKEN_KEY,
   REFRESH_TOKEN_KEY,
-} from './authSession.js'
+} from '../utils/authSession.ts'
 
 describe('initCapabilityPlatformAuth', () => {
   beforeEach(() => {
