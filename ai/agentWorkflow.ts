@@ -28,6 +28,8 @@ export type AgentNodeType =
   | 'task-chain'
   | 'collaboration-router'
   | 'agent-loop'
+  | 'code-execute'
+  | 'variable-set'
 
 export type AgentWorkflowStatus = 'draft' | 'published' | 'archived'
 
@@ -177,6 +179,13 @@ export interface AgentWorkflowNodeData {
   agentLoopInputTemplate?: string
   /** agent-loop 工具调用总次数硬上限（防 token 失控），默认 50 */
   agentLoopMaxToolInvocations?: number
+  /** code-execute: JavaScript 代码（沙箱执行） */
+  codeLanguage?: 'javascript'
+  codeScript?: string
+  /** variable-set: 设置/更新工作流变量 */
+  variableName?: string
+  variableValue?: string
+  variableMode?: 'set' | 'append' | 'increment'
   notes?: string
 }
 
@@ -526,6 +535,21 @@ export function createDefaultNodeData(type: AgentNodeType): AgentWorkflowNodeDat
         agentLoopSystemPrompt: '你是一个自主智能体，根据用户请求调用可用工具完成任务。每次思考后选择一个工具调用，获得结果后继续，直到任务完成时直接给出最终回答（不要调用工具）。',
         agentLoopInputSource: 'message',
         agentLoopInputTemplate: '',
+      } as AgentWorkflowNodeData
+    case 'code-execute':
+      return {
+        ...base,
+        label: '代码执行',
+        codeLanguage: 'javascript',
+        codeScript: '// 可用变量：$input（工作流输入）、$node（上游节点输出）\n// 返回值作为节点输出\nreturn { result: $input.message }',
+      } as AgentWorkflowNodeData
+    case 'variable-set':
+      return {
+        ...base,
+        label: '变量赋值',
+        variableName: 'myVar',
+        variableValue: '{{$input.message}}',
+        variableMode: 'set',
       } as AgentWorkflowNodeData
     default:
       return base
@@ -3035,6 +3059,18 @@ export function validateAgentWorkflowGraph(graph: AgentWorkflowGraph): AgentWork
       }
       if ((d.agentLoopMaxIterations ?? 8) < 1) {
         issues.push({ level: 'error', nodeId: node.id, message: '智能体循环最大迭代次数不能小于 1' })
+      }
+    }
+    if (node.type === 'code-execute') {
+      const d = node.data as AgentWorkflowNodeData
+      if (!d.codeScript?.trim()) {
+        issues.push({ level: 'error', nodeId: node.id, message: '代码执行节点脚本为空' })
+      }
+    }
+    if (node.type === 'variable-set') {
+      const d = node.data as AgentWorkflowNodeData
+      if (!d.variableName?.trim()) {
+        issues.push({ level: 'error', nodeId: node.id, message: '变量赋值节点变量名为空' })
       }
     }
   }
