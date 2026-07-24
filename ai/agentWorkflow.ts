@@ -31,6 +31,7 @@ export type AgentNodeType =
   | 'code-execute'
   | 'variable-set'
   | 'switch'
+  | 'schedule-trigger'
 
 export type AgentWorkflowStatus = 'draft' | 'published' | 'archived'
 
@@ -93,6 +94,12 @@ export interface AgentWorkflowNodeData {
   webhookMethod?: 'GET' | 'POST'
   /** 发布时生成，用于 HMAC 验签 */
   webhookSecret?: string
+  /** schedule-trigger：cron 表达式（5 字段：分 时 日 月 周） */
+  scheduleCron?: string
+  /** schedule-trigger：时区，默认 Asia/Shanghai */
+  scheduleTimezone?: string
+  /** schedule-trigger：是否启用 */
+  scheduleEnabled?: boolean
   /** document-parse / vision-analyze */
   documentSource?: 'documentId' | 'inputField' | 'stream' | 'api'
   documentId?: string
@@ -388,7 +395,7 @@ export interface AgentWorkflowExecution {
   versionId: string | null
   version: string
   status: AgentExecutionStatus
-  trigger: 'manual' | 'chat' | 'webhook' | 'api'
+  trigger: 'manual' | 'chat' | 'webhook' | 'api' | 'schedule'
   startedAt: string
   finishedAt?: string
   durationMs?: number
