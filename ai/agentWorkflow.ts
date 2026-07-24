@@ -905,12 +905,15 @@ export type AgentWorkflowTemplateId =
   | 'faq-quality-check'
   | 'multimodal-image-text'
   | 'multimodal-video-promo'
+  | 'resume-screening'
+  | 'expense-audit'
+  | 'feedback-analysis'
 
 export interface AgentWorkflowTemplateMeta {
   id: AgentWorkflowTemplateId
   name: string
   description: string
-  category: 'general' | 'document' | 'assistant' | 'integration' | 'batch' | 'customer-service' | 'audit'
+  category: 'general' | 'document' | 'assistant' | 'integration' | 'batch' | 'customer-service' | 'audit' | 'hr' | 'finance' | 'operations'
   icon?: string
   tags?: string[]
 }
@@ -1111,6 +1114,27 @@ export const AGENT_WORKFLOW_TEMPLATES: AgentWorkflowTemplateMeta[] = [
     category: 'general',
     icon: 'video-play',
     tags: ['multimodal', 'video', 'marketing'],
+  },
+  {
+    id: 'resume-screening',
+    name: '简历筛选',
+    description: '解析简历文档，提取关键信息，匹配岗位要求，输出评分与录用建议',
+    category: 'hr',
+    tags: ['resume', 'screening', 'hr', 'document'],
+  },
+  {
+    id: 'expense-audit',
+    name: '报销单审核',
+    description: '解析报销凭证，核对金额与项目合规性，输出审核结果与异常项',
+    category: 'finance',
+    tags: ['expense', 'audit', 'finance', 'compliance'],
+  },
+  {
+    id: 'feedback-analysis',
+    name: '客户反馈分析',
+    description: '批量处理客户反馈，情感分类+主题提取，生成汇总报告',
+    category: 'operations',
+    tags: ['feedback', 'sentiment', 'analysis', 'batch'],
   },
 ]
 
@@ -2084,6 +2108,12 @@ export function createAgentWorkflowGraphByTemplate(
       return createMultimodalImageTextWorkflowGraph()
     case 'multimodal-video-promo':
       return createMultimodalVideoPromoWorkflowGraph()
+    case 'resume-screening':
+      return createResumeScreeningWorkflowGraph()
+    case 'expense-audit':
+      return createExpenseAuditWorkflowGraph()
+    case 'feedback-analysis':
+      return createFeedbackAnalysisWorkflowGraph()
     case 'blank':
     default:
       return createDefaultAgentWorkflowGraph()
@@ -3002,6 +3032,201 @@ export function createRequirementGatedBuildWorkflowGraph(): AgentWorkflowGraph {
     ],
   })
 }
+
+
+/** 简历筛选：Webhook 接收简历 → 文档解析 → LLM 提取关键信息 → LLM 匹配岗位评分 → 结构化输出 */
+export function createResumeScreeningWorkflowGraph(): AgentWorkflowGraph {
+  return layoutAgentWorkflowGraph({
+    entryNodeId: 'webhook-1',
+    nodes: [
+      {
+        id: 'webhook-1',
+        type: 'webhook-trigger',
+        position: { x: 80, y: 200 },
+        data: {
+          label: '接收简历',
+          webhookPath: '/resume-screening',
+          webhookMethod: 'POST',
+        },
+      },
+      {
+        id: 'parse-1',
+        type: 'document-parse',
+        position: { x: 320, y: 200 },
+        data: {
+          label: '简历解析',
+          documentSource: 'stream',
+          streamField: 'file',
+        },
+      },
+      {
+        id: 'llm-1',
+        type: 'llm',
+        position: { x: 560, y: 200 },
+        data: {
+          label: '信息提取与评分',
+          model: 'default',
+          systemPrompt:
+            '你是资深 HR。从简历中提取关键信息，与岗位要求匹配后打分。\n\n输出 JSON：\n{\n  "candidate": { "name": "", "education": "", "experience": "", "skills": [] },\n  "matchScore": 0-100,\n  "strengths": [],\n  "weaknesses": [],\n  "recommendation": "strong_yes|yes|maybe|no",\n  "reason": ""\n}\n只输出 JSON。',
+          prompt:
+            '岗位要求：\n{{$input.jobRequirements || "未指定岗位要求，请按通用标准评估"}}\n\n简历内容：\n{{$node.parse-1.text}}\n\n请提取信息并评分。',
+        },
+      },
+      {
+        id: 'end-1',
+        type: 'end',
+        position: { x: 800, y: 200 },
+        data: {
+          label: '输出结果',
+          outputSource: 'node',
+          outputNodeId: 'llm-1',
+        },
+      },
+    ],
+    edges: [
+      { id: 'e1', source: 'webhook-1', target: 'parse-1' },
+      { id: 'e2', source: 'parse-1', target: 'llm-1' },
+      { id: 'e3', source: 'llm-1', target: 'end-1' },
+    ],
+  })
+}
+
+/** 报销单审核：Webhook 接收凭证 → 文档解析 → LLM 核对金额/合规 → 条件分支（合规/异常）→ 异常走 HITL */
+export function createExpenseAuditWorkflowGraph(): AgentWorkflowGraph {
+  return layoutAgentWorkflowGraph({
+    entryNodeId: 'webhook-1',
+    nodes: [
+      {
+        id: 'webhook-1',
+        type: 'webhook-trigger',
+        position: { x: 80, y: 200 },
+        data: {
+          label: '接收报销单',
+          webhookPath: '/expense-audit',
+          webhookMethod: 'POST',
+        },
+      },
+      {
+        id: 'parse-1',
+        type: 'document-parse',
+        position: { x: 320, y: 200 },
+        data: {
+          label: '凭证解析',
+          documentSource: 'stream',
+          streamField: 'file',
+        },
+      },
+      {
+        id: 'llm-1',
+        type: 'llm',
+        position: { x: 560, y: 200 },
+        data: {
+          label: '合规审核',
+          model: 'default',
+          systemPrompt:
+            '你是财务审核员。核对报销单的金额、项目、票据合规性。\n\n输出 JSON：\n{\n  "compliant": true|false,\n  "totalAmount": 0,\n  "items": [{"description": "", "amount": 0, "compliant": true|false, "reason": ""}],\n  "anomalies": [],\n  "suggestion": "approve|reject|need_review"\n}\n只输出 JSON。',
+          prompt: '报销单内容：\n{{$node.parse-1.text}}\n\n请进行合规审核。',
+        },
+      },
+      {
+        id: 'if-1',
+        type: 'if',
+        position: { x: 800, y: 200 },
+        data: {
+          label: '是否合规',
+          expression: 'lastOutput && lastOutput.suggestion === "need_review"',
+        },
+      },
+      {
+        id: 'hitl-1',
+        type: 'hitl',
+        position: { x: 1040, y: 120 },
+        data: {
+          label: '人工复核',
+          confirmMessage: '报销单存在异常项：{{$node.llm-1.anomalies}}。总金额：{{$node.llm-1.totalAmount}}元。请确认处理方式。',
+          confirmQuestions: [
+            { id: 'q1', question: '处理方式', options: ['批准', '驳回', '要求补充材料'], required: true },
+            { id: 'q2', question: '备注', required: false },
+          ],
+        },
+      },
+      {
+        id: 'end-pass',
+        type: 'end',
+        position: { x: 1040, y: 280 },
+        data: { label: '审核通过', outputSource: 'node', outputNodeId: 'llm-1' },
+      },
+      {
+        id: 'end-review',
+        type: 'end',
+        position: { x: 1280, y: 120 },
+        data: { label: '人工处理完成' },
+      },
+    ],
+    edges: [
+      { id: 'e1', source: 'webhook-1', target: 'parse-1' },
+      { id: 'e2', source: 'parse-1', target: 'llm-1' },
+      { id: 'e3', source: 'llm-1', target: 'if-1' },
+      { id: 'e4', source: 'if-1', target: 'hitl-1', sourceHandle: 'matched' },
+      { id: 'e5', source: 'if-1', target: 'end-pass', sourceHandle: 'continue' },
+      { id: 'e6', source: 'hitl-1', target: 'end-review' },
+    ],
+  })
+}
+
+/** 客户反馈分析：手动触发 → RAG 检索反馈数据 → LLM 批量分析（情感+主题）→ 汇总报告 */
+export function createFeedbackAnalysisWorkflowGraph(): AgentWorkflowGraph {
+  return layoutAgentWorkflowGraph({
+    entryNodeId: 'trigger-1',
+    nodes: [
+      {
+        id: 'trigger-1',
+        type: 'manual-trigger',
+        position: { x: 80, y: 200 },
+        data: { label: '手动触发' },
+      },
+      {
+        id: 'rag-1',
+        type: 'llm',
+        position: { x: 320, y: 200 },
+        data: {
+          label: '反馈数据汇总',
+          model: 'default',
+          systemPrompt: '你从上下文中获取客户反馈数据，整理为结构化列表。如果上下文没有数据，提示用户输入反馈内容。',
+          prompt: '请整理以下客户反馈数据：\n\n{{$input.message}}',
+        },
+      },
+      {
+        id: 'llm-1',
+        type: 'llm',
+        position: { x: 560, y: 200 },
+        data: {
+          label: '情感与主题分析',
+          model: 'default',
+          systemPrompt:
+            '你是数据分析专家。对客户反馈进行情感分类和主题提取。\n\n输出 JSON：\n{\n  "summary": { "total": 0, "positive": 0, "neutral": 0, "negative": 0 },\n  "topThemes": [{"theme": "", "count": 0, "sentiment": ""}],\n  "insights": [],\n  "actionItems": []\n}\n只输出 JSON。',
+          prompt: '客户反馈数据：\n{{$node.rag-1.text}}\n\n请进行情感分析和主题提取。',
+        },
+      },
+      {
+        id: 'end-1',
+        type: 'end',
+        position: { x: 800, y: 200 },
+        data: {
+          label: '输出报告',
+          outputSource: 'node',
+          outputNodeId: 'llm-1',
+        },
+      },
+    ],
+    edges: [
+      { id: 'e1', source: 'trigger-1', target: 'rag-1' },
+      { id: 'e2', source: 'rag-1', target: 'llm-1' },
+      { id: 'e3', source: 'llm-1', target: 'end-1' },
+    ],
+  })
+}
+
 
 export function validateAgentWorkflowGraph(graph: AgentWorkflowGraph): AgentWorkflowValidationIssue[] {
   const issues: AgentWorkflowValidationIssue[] = []
