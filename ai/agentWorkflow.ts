@@ -32,6 +32,7 @@ export type AgentNodeType =
   | 'variable-set'
   | 'switch'
   | 'schedule-trigger'
+  | 'agent-team'
 
 export type AgentWorkflowStatus = 'draft' | 'published' | 'archived'
 
@@ -187,6 +188,21 @@ export interface AgentWorkflowNodeData {
   agentLoopInputTemplate?: string
   /** agent-loop 工具调用总次数硬上限（防 token 失控），默认 50 */
   agentLoopMaxToolInvocations?: number
+  /** agent-team：团队成员列表 */
+  agentTeamMembers?: Array<{
+    name: string
+    persona: string
+    model?: string
+    tools?: string[]
+  }>
+  /** agent-team：协作模式 */
+  agentTeamMode?: 'sequential' | 'discussion'
+  /** agent-team：最大 supervisor 轮次 */
+  agentTeamMaxRounds?: number
+  /** agent-team：supervisor 模型 */
+  agentTeamModel?: string
+  /** agent-team：supervisor 系统提示 */
+  agentTeamSystemPrompt?: string
   /** code-execute: JavaScript 代码（沙箱执行） */
   codeLanguage?: 'javascript'
   codeScript?: string
