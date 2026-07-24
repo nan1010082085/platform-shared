@@ -562,6 +562,20 @@ export function createDefaultNodeData(type: AgentNodeType): AgentWorkflowNodeDat
         agentLoopInputSource: 'message',
         agentLoopInputTemplate: '',
       } as AgentWorkflowNodeData
+    case 'agent-team':
+      return {
+        ...base,
+        label: 'Agent 团队',
+        agentTeamMembers: [
+          { name: '产品', persona: '产品经理，负责需求分析和方案设计', tools: [] },
+          { name: '开发', persona: '开发工程师，负责技术实现和代码编写', tools: [] },
+        ],
+        agentTeamMode: 'sequential',
+        agentTeamMaxRounds: 5,
+        agentTeamModel: 'default',
+        agentTeamSystemPrompt: '',
+        agentLoopMaxToolInvocations: 50,
+      } as AgentWorkflowNodeData
     case 'code-execute':
       return {
         ...base,
@@ -3094,6 +3108,15 @@ export function validateAgentWorkflowGraph(graph: AgentWorkflowGraph): AgentWork
       }
       if ((d.agentLoopMaxIterations ?? 8) < 1) {
         issues.push({ level: 'error', nodeId: node.id, message: '智能体循环最大迭代次数不能小于 1' })
+      }
+    }
+    if (node.type === 'agent-team') {
+      const d = node.data as AgentWorkflowNodeData
+      if (!d.agentTeamMembers || d.agentTeamMembers.length === 0) {
+        issues.push({ level: 'error', nodeId: node.id, message: 'Agent 团队节点成员列表为空' })
+      }
+      if ((d.agentTeamMaxRounds ?? 5) < 1) {
+        issues.push({ level: 'error', nodeId: node.id, message: 'Agent 团队最大轮次不能小于 1' })
       }
     }
     if (node.type === 'code-execute') {
