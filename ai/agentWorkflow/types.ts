@@ -12,6 +12,10 @@ export type AgentNodeType =
   | 'audio-transcribe'
   | 'video-analyze'
   | 'conversation-memory'
+  | 'memory-recall'
+  | 'memory-write'
+  | 'memory-extract'
+  | 'handoff'
   | 'llm'
   | ExpertNodeType
   | 'tool'
@@ -154,6 +158,42 @@ export interface AgentWorkflowNodeData {
   memoryRole?: 'user' | 'assistant'
   messageField?: string
   contentSource?: 'input' | 'lastOutput'
+  /** memory-recall：检索用户长程记忆（跨会话），注入下游 prompt */
+  /** 检索 query 模板，支持 {{$input.xxx}} / {{$node.xxx}}，默认 {{$input.message}} */
+  memoryRecallQuery?: string
+  /** 召回条数，默认 5 */
+  memoryRecallLimit?: number
+  /** 记忆类型过滤，默认 all */
+  memoryRecallNamespace?: 'all' | 'preference' | 'fact' | 'event' | 'skill'
+  /** 用户来源：auto=从执行上下文取当前用户，input=从工作流输入取，custom=固定值 */
+  memoryRecallUserIdSource?: 'auto' | 'input' | 'custom'
+  /** memoryRecallUserIdSource=custom 时的固定用户 ID */
+  memoryRecallUserId?: string
+  /** memory-write：写入一条长程记忆（跨会话持久化） */
+  /** 记忆内容模板，支持 {{$input.xxx}} / {{$node.xxx}} */
+  memoryWriteContent?: string
+  /** 记忆类型 */
+  memoryWriteNamespace?: 'preference' | 'fact' | 'event' | 'skill'
+  /** 重要性 0-1，影响检索排序与遗忘，默认 0.5 */
+  memoryWriteImportance?: number
+  memoryWriteUserIdSource?: 'auto' | 'input' | 'custom'
+  memoryWriteUserId?: string
+  /** memory-extract：LLM 从文本提取值得记忆的事实/偏好，输出可接 memory-write */
+  /** 文本来源：input=工作流输入，lastOutput=上游节点输出，custom=自定义模板 */
+  memoryExtractSource?: 'input' | 'lastOutput' | 'custom'
+  /** memoryExtractSource=custom 时的模板，支持 {{$input.xxx}} / {{$node.xxx}} */
+  memoryExtractTemplate?: string
+  /** 提取用的模型，默认 default */
+  memoryExtractModel?: string
+  /** 提取出的记忆默认归类（LLM 可覆盖） */
+  memoryExtractNamespace?: 'preference' | 'fact' | 'event' | 'skill'
+  /** handoff：将会话控制权转移给目标 workflow（传递上下文 + 接管 persona） */
+  /** 目标已发布 workflow ID */
+  handoffTargetWorkflowId?: string
+  /** 是否传递当前对话历史给目标 workflow，默认 true */
+  handoffPassHistory?: boolean
+  /** 传递给目标 workflow 的输入模板，默认 {{$input.message}} */
+  handoffInputTemplate?: string
   /** end — 输出配置 */
   /** 输出来源：lastOutput=最后一个节点输出，node=指定节点，custom=自定义JSON */
   outputSource?: 'lastOutput' | 'node' | 'custom'
@@ -205,7 +245,7 @@ export interface AgentWorkflowNodeData {
     tools?: string[]
   }>
   /** agent-team：协作模式 */
-  agentTeamMode?: 'sequential' | 'discussion'
+  agentTeamMode?: 'sequential' | 'discussion' | 'parallel'
   /** agent-team：最大 supervisor 轮次 */
   agentTeamMaxRounds?: number
   /** agent-team：supervisor 模型 */

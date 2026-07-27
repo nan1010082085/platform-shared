@@ -223,6 +223,40 @@ export function createDefaultNodeData(type: AgentNodeType): AgentWorkflowNodeDat
           { label: '分支B', expression: 'false' },
         ],
       } as AgentWorkflowNodeData
+    case 'memory-recall':
+      return {
+        ...base,
+        label: '长程记忆检索',
+        memoryRecallQuery: '{{$input.message}}',
+        memoryRecallLimit: 5,
+        memoryRecallNamespace: 'all',
+        memoryRecallUserIdSource: 'auto',
+      } as AgentWorkflowNodeData
+    case 'memory-write':
+      return {
+        ...base,
+        label: '长程记忆写入',
+        memoryWriteContent: '{{$input.message}}',
+        memoryWriteNamespace: 'fact',
+        memoryWriteImportance: 0.5,
+        memoryWriteUserIdSource: 'auto',
+      } as AgentWorkflowNodeData
+    case 'memory-extract':
+      return {
+        ...base,
+        label: '长程记忆提取',
+        memoryExtractSource: 'lastOutput',
+        memoryExtractModel: 'default',
+        memoryExtractNamespace: 'fact',
+      } as AgentWorkflowNodeData
+    case 'handoff':
+      return {
+        ...base,
+        label: '会话交接',
+        handoffTargetWorkflowId: '',
+        handoffPassHistory: true,
+        handoffInputTemplate: '{{$input.message}}',
+      } as AgentWorkflowNodeData
     default:
       return base
   }

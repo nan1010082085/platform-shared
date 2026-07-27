@@ -129,6 +129,24 @@ export function validateAgentWorkflowGraph(graph: AgentWorkflowGraph): AgentWork
         issues.push({ level: 'error', nodeId: node.id, message: 'Agent 团队最大轮次不能小于 1' })
       }
     }
+    if (node.type === 'memory-write') {
+      const d = node.data as AgentWorkflowNodeData
+      if (!d.memoryWriteContent?.trim()) {
+        issues.push({ level: 'error', nodeId: node.id, message: '长程记忆写入节点内容为空' })
+      }
+    }
+    if (node.type === 'memory-recall') {
+      const d = node.data as AgentWorkflowNodeData
+      if (!d.memoryRecallQuery?.trim()) {
+        issues.push({ level: 'warning', nodeId: node.id, message: '长程记忆检索节点 query 为空，将使用默认值' })
+      }
+    }
+    if (node.type === 'handoff') {
+      const d = node.data as AgentWorkflowNodeData
+      if (!d.handoffTargetWorkflowId?.trim()) {
+        issues.push({ level: 'error', nodeId: node.id, message: '会话交接节点未选择目标 workflow' })
+      }
+    }
     if (node.type === 'code-execute') {
       const d = node.data as AgentWorkflowNodeData
       if (!d.codeScript?.trim()) {
