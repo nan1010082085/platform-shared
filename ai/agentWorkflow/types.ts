@@ -213,6 +213,28 @@ export interface AgentWorkflowNodeData {
   /** switch: 多路条件分支 */
   switchBranches?: Array<{ label: string; expression: string }>
   notes?: string
+  /** approval-analyze：审批分析的表单提交 ID 来源 */
+  approvalSubmissionSource?: 'input' | 'stream' | 'custom'
+  approvalSubmissionId?: string
+  approvalModel?: string
+  /** flow-interact：要交互的流程定义 ID + 动作 */
+  flowInteractDefinitionId?: string
+  flowInteractAction?: 'start' | 'query' | 'approve' | 'reject'
+  /** compliance-check：行业 + 规则 */
+  complianceIndustry?: 'medical' | 'finance' | 'education' | 'general'
+  complianceRules?: string[]
+  /** module-assemble：模块类型 + pattern */
+  moduleType?: 'oa' | 'hr' | 'finance' | 'audit' | 'custom'
+  modulePattern?: string
+  /** form-query：查询的表单 + 过滤 + 限制 */
+  formQuerySchemaId?: string
+  formQueryFilter?: string
+  formQueryLimit?: number
+  /** anomaly-detect：检测维度 */
+  anomalyDimensions?: string[]
+  /** chart-generate：图表类型 + 数据字段 */
+  chartType?: 'auto' | 'bar' | 'line' | 'pie' | 'table'
+  chartDataField?: string
 }
 
 /** 图片生成节点专用数据子集（用于类型安全的参数传递） */

@@ -155,6 +155,50 @@ export function createDefaultNodeData(type: AgentNodeType): AgentWorkflowNodeDat
         agentTeamSystemPrompt: '',
         agentLoopMaxToolInvocations: 50,
       } as AgentWorkflowNodeData
+    case 'approval-analyze':
+      return {
+        ...base,
+        label: '审批建议',
+        approvalSubmissionSource: 'input',
+        approvalModel: 'default',
+      } as AgentWorkflowNodeData
+    case 'flow-interact':
+      return {
+        ...base,
+        label: '流程交互',
+        flowInteractAction: 'query',
+      } as AgentWorkflowNodeData
+    case 'compliance-check':
+      return {
+        ...base,
+        label: '合规检查',
+        complianceIndustry: 'general',
+        complianceRules: [],
+      } as AgentWorkflowNodeData
+    case 'module-assemble':
+      return {
+        ...base,
+        label: '模块组装',
+        moduleType: 'custom',
+      } as AgentWorkflowNodeData
+    case 'form-query':
+      return {
+        ...base,
+        label: '表单查询',
+        formQueryLimit: 10,
+      } as AgentWorkflowNodeData
+    case 'anomaly-detect':
+      return {
+        ...base,
+        label: '异常检测',
+        anomalyDimensions: ['amount', 'frequency'],
+      } as AgentWorkflowNodeData
+    case 'chart-generate':
+      return {
+        ...base,
+        label: '图表生成',
+        chartType: 'auto',
+      } as AgentWorkflowNodeData
     case 'code-execute':
       return {
         ...base,
