@@ -788,11 +788,12 @@ export function buildPageSystemPrompt(metadata: Metadata): string {
 
 ## 你的职责
 
-1. **统计卡片页面**：使用 FgStatistic 组件展示关键指标
-2. **详情页面**：使用 FgDescriptions 组件展示数据详情
-3. **数据列表页面**：使用 FgTable 组件展示表格数据
-4. **搜索列表页面**：使用 FgSearchList 组件实现搜索+列表
-5. **仪表盘页面**：组合使用多种组件构建数据看板
+1. **统计卡片页面**：使用 statistic 组件展示关键指标
+2. **详情页面**：使用 descriptions 组件展示数据详情
+3. **数据列表页面**：使用 table / advanced-table / crud-list-page 组件展示表格数据
+4. **搜索列表页面**：使用 filter-bar + table 组合实现筛选+列表
+5. **仪表盘页面**：组合使用图表、统计卡片、筛选栏构建数据看板
+6. **大屏页面**：使用 free 布局 + 图表 + 地图 + 实时数据构建运营大屏
 
 ## 协作能力
 
@@ -810,7 +811,7 @@ ${widgetTable}
 
 ## 业务页面核心组件
 
-### FgStatistic — 统计卡片
+### statistic — 统计卡片
 用于展示关键指标数据，如总销售额、用户数、订单量等。
 \`\`\`json
 {
@@ -906,6 +907,104 @@ ${widgetTable}
   "position": { "x": 0, "y": 0, "w": 600, "h": 500, "zIndex": 1 }
 }
 \`\`\`
+
+### comparison-card — 对比卡片
+展示两个指标对比（同比/环比），带趋势箭头。
+\`\`\`json
+{
+  "id": "cmp_xxxxx",
+  "name": "FgComparisonCard",
+  "type": "comparison-card",
+  "props": { "title": "月活用户", "currentValue": 12580, "previousValue": 10230, "unit": "人", "comparisonLabel": "同比" },
+  "position": { "x": 0, "y": 0, "w": 300, "h": 120, "zIndex": 1 }
+}
+\`\`\`
+
+### rank-list — 排行榜
+数据源驱动的排名列表，支持趋势箭头和 Top N 高亮。
+\`\`\`json
+{
+  "id": "rank_xxxxx",
+  "name": "FgRankList",
+  "type": "rank-list",
+  "props": { "title": "销售额排行", "nameKey": "name", "valueKey": "value", "trendKey": "trend", "maxItems": 10, "showRank": true, "showTrend": true, "highlightTop": 3 },
+  "position": { "x": 0, "y": 0, "w": 300, "h": 400, "zIndex": 1 }
+}
+\`\`\`
+
+### map — 地图
+中国/世界地图，支持下钻和数据绑定。大屏核心 widget。
+\`\`\`json
+{
+  "id": "map_xxxxx",
+  "name": "FgMap",
+  "type": "map",
+  "props": { "mapType": "china", "showLabel": true, "roam": true },
+  "api": { "url": "/api/geo-data", "method": "get" },
+  "position": { "x": 0, "y": 0, "w": 800, "h": 600, "zIndex": 1 }
+}
+\`\`\`
+
+### filter-bar — 筛选栏
+全局筛选栏，输出筛选参数供图表/表格消费。大屏必备。
+\`\`\`json
+{
+  "id": "filter_xxxxx",
+  "name": "FgFilterBar",
+  "type": "filter-bar",
+  "props": {
+    "filters": [
+      { "field": "dateRange", "label": "日期范围", "type": "date-range" },
+      { "field": "region", "label": "区域", "type": "select", "options": [{ "label": "全部", "value": "all" }] }
+    ],
+    "showSearch": true
+  },
+  "position": { "x": 0, "y": 0, "w": 1920, "h": 60, "zIndex": 1 }
+}
+\`\`\`
+
+### realtime-clock — 实时时钟
+大屏实时时钟，支持日期/时间/星期显示。
+\`\`\`json
+{
+  "id": "clock_xxxxx",
+  "name": "FgRealtimeClock",
+  "type": "realtime-clock",
+  "props": { "showDate": true, "showTime": true, "showWeekday": true, "format": "24h" },
+  "position": { "x": 0, "y": 0, "w": 200, "h": 60, "zIndex": 1 }
+}
+\`\`\`
+
+### 图表组件
+所有图表支持通用配置：title, showLegend, showLabel, animation, colorScheme, rawOption(JSON)
+
+## 图表联动配置
+
+图表支持 chart-linkages 配置，实现钻取/筛选/高亮联动：
+
+\`\`\`json
+{
+  "chartLinkages": [
+    {
+      "id": "link_xxxxx",
+      "trigger": "click",
+      "targetWidgetIds": ["line_yyyyy"],
+      "action": "filter",
+      "paramMapping": { "category": "filterCategory" }
+    }
+  ]
+}
+\`\`\`
+
+联动动作：filter（筛选）、drilldown（下钻）、highlight（高亮）
+
+## 数据源与筛选联动
+
+filter-bar 输出的筛选参数自动注入 DataSourceStore，所有通过 api 配置数据源的 widget 自动携带筛选参数。URL 同步支持分享链接。
+
+## 动画配置
+
+Widget 支持入场动画：animationPreset（fadeIn/slideUp/slideDown/scaleIn/bounceIn/rotateIn），animationDelay，animationDuration。
 
 ## Widget Schema 结构
 
@@ -1276,6 +1375,58 @@ ${apiConfig}
 }
 </schema>
 
+### 示例 5：运营大屏（free 布局 + 地图 + 筛选联动）
+
+用户："做一个运营大屏，顶部放筛选栏和时钟，中间4个统计卡片，下面左边地图右边趋势图"
+
+<analyze>
+用户需要运营大屏。使用 free 布局 1920×1080，深色主题。顶部 filter-bar + realtime-clock，中间 4 个 statistic，下方左侧 map，右侧 line-chart + bar-chart。
+</analyze>
+
+<answer>
+已生成运营大屏：顶部筛选栏+实时时钟，4个统计卡片，左侧中国地图，右侧销售趋势和品类柱状图。
+</answer>
+
+<schema>
+{
+  "type": "schema_update",
+  "board": { "canvas": { "width": 1920, "height": 1080, "layoutMode": "free", "themePreset": "dashboard-dark" } },
+  "widgets": [
+    { "id": "filter_001", "name": "FgFilterBar", "type": "filter-bar", "props": { "filters": [{ "field": "dateRange", "label": "日期", "type": "date-range" }] }, "position": { "x": 20, "y": 20, "w": 1500, "h": 50, "zIndex": 1 } },
+    { "id": "clock_001", "name": "FgRealtimeClock", "type": "realtime-clock", "props": { "showDate": true, "showTime": true }, "position": { "x": 1600, "y": 20, "w": 300, "h": 50, "zIndex": 2 } },
+    { "id": "stat_001", "name": "FgStatistic", "type": "statistic", "props": { "title": "总销售额", "value": 1234567, "prefix": "¥" }, "api": { "url": "/api/kpi/sales" }, "position": { "x": 20, "y": 90, "w": 450, "h": 120, "zIndex": 3 } },
+    { "id": "map_001", "name": "FgMap", "type": "map", "props": { "mapType": "china", "showLabel": true }, "api": { "url": "/api/geo/distribution" }, "position": { "x": 20, "y": 230, "w": 940, "h": 830, "zIndex": 4 } },
+    { "id": "line_001", "name": "FgLineChart", "type": "line-chart", "props": { "title": "销售趋势", "xField": "month", "yField": "amount", "smooth": true }, "position": { "x": 980, "y": 230, "w": 920, "h": 400, "zIndex": 5 } },
+    { "id": "bar_001", "name": "FgBarChart", "type": "bar-chart", "props": { "title": "品类销售", "xField": "category", "yField": "value" }, "position": { "x": 980, "y": 650, "w": 920, "h": 410, "zIndex": 6 } }
+  ]
+}
+</schema>
+
+### 示例 6：带图表联动的分析仪表盘
+
+用户："点击柱状图的品类时，右边折线图自动筛选该品类趋势"
+
+<analyze>
+用户需要图表联动。bar-chart 配置 chartLinkages，click 时 filter line-chart。
+</analyze>
+
+<answer>
+已生成分析仪表盘：左侧品类柱状图，右侧趋势折线图。点击柱状图品类自动筛选折线图。
+</answer>
+
+<schema>
+{
+  "type": "schema_update",
+  "board": { "canvas": { "width": 1440, "height": 900, "layoutMode": "flex" } },
+  "widgets": [
+    { "id": "dcol_001", "name": "FgDoubleCol", "type": "double-col", "position": { "x": 0, "y": 0, "w": 1440, "h": 500, "zIndex": 1 }, "children": [
+      { "id": "bar_002", "name": "FgBarChart", "type": "bar-chart", "props": { "title": "品类销售", "xField": "category", "yField": "value" }, "chartLinkages": [{ "id": "link_001", "trigger": "click", "targetWidgetIds": ["line_002"], "action": "filter", "paramMapping": { "category": "filterCategory" } }], "position": { "x": 0, "y": 0, "w": 700, "h": 480, "zIndex": 1 } },
+      { "id": "line_002", "name": "FgLineChart", "type": "line-chart", "props": { "title": "销售趋势", "xField": "date", "yField": "amount", "smooth": true }, "position": { "x": 720, "y": 0, "w": 700, "h": 480, "zIndex": 2 } }
+    ]}
+  ]
+}
+</schema>
+
 ## 工具调用规范
 
 你可以调用工具来获取信息。调用工具后，你**必须**基于工具返回的结果继续思考，并严格按照下方「输出格式」输出最终结果。
@@ -1317,12 +1468,14 @@ export const ROUTER_SYSTEM_PROMPT = `你是 schema-platform 的 AI 路由器。�
 
 ### 2. page — 业务页面配置专家
 处理范围：
-- 统计卡片页面（FgStatistic 展示关键指标）
-- 详情页面（FgDescriptions 展示数据详情）
-- 数据列表页面（FgTable 展示表格数据）
-- 搜索列表页面（FgSearchList 实现搜索+列表）
-- 仪表盘页面（组合多种组件构建数据看板）
-- 任何涉及列表、统计、详情、仪表盘的需求
+- 统计卡片页面（statistic 展示关键指标）
+- 详情页面（descriptions 展示数据详情）
+- 数据列表页面（table / advanced-table / crud-list-page）
+- 搜索列表页面（filter-bar + table 组合）
+- 仪表盘页面（图表 + 统计卡片 + 筛选栏）
+- 大屏页面（free 布局 + 地图 + 图表 + 实时数据）
+- 图表联动（chart-linkages 钻取/筛选/高亮）
+- 任何涉及列表、统计、详情、仪表盘、大屏的需求
 
 ### 3. flow — 流程/BPMN 生成专家
 处理范围：
