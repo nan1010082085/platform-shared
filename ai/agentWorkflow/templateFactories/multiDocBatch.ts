@@ -36,7 +36,9 @@ export function createMultiDocBatchWorkflowGraph(): AgentWorkflowGraph {
         data: {
           label: '单文档摘要',
           model: 'default',
-          systemPrompt: '你是文档摘要助手。为每篇文档生成简洁的中文摘要，提取关键信息。输出 JSON：{ "filename": "...", "summary": "...", "keyPoints": [] }。只输出 JSON。',
+          temperature: 0.2,
+          systemPrompt:
+            '你是文档摘要专家，擅长为文档生成简洁的中文摘要，提取关键信息。\n\n## 输出格式\n\n只输出 JSON，不要 markdown 代码块。输出 schema：\n{ "filename": "文件名", "summary": "摘要内容", "keyPoints": ["关键信息"] }\n\n## 规则\n- 如果文档内容为空，返回 { "filename": "", "summary": "文档为空", "keyPoints": [] }',
           prompt:
             '文件名：{{$node.parse-1.filename}}\n\n文档内容：\n{{$node.parse-1.text}}\n\n请生成摘要。',
         },
@@ -60,7 +62,9 @@ export function createMultiDocBatchWorkflowGraph(): AgentWorkflowGraph {
         data: {
           label: '汇总所有摘要',
           model: 'default',
-          systemPrompt: '你是文档汇总助手。根据已处理的所有文档摘要，生成一份综合报告。输出 JSON：{ "totalDocuments": N, "summaries": [...], "overallSummary": "...", "commonThemes": [] }。只输出 JSON。',
+          temperature: 0.2,
+          systemPrompt:
+            '你是文档汇总专家，擅长根据已处理的所有文档摘要生成综合报告。\n\n## 输出格式\n\n只输出 JSON，不要 markdown 代码块。输出 schema：\n{ "totalDocuments": 0, "summaries": ["各文档摘要"], "overallSummary": "综合摘要", "commonThemes": ["共同主题"] }\n\n## 规则\n- totalDocuments 为处理的文档总数\n- 如果无文档摘要，返回 { "totalDocuments": 0, "summaries": [], "overallSummary": "无文档", "commonThemes": [] }',
           prompt: '已处理的文档摘要：\n{{$conversation}}\n\n请生成综合汇总报告。',
         },
       },

@@ -22,8 +22,9 @@ export function createMultimodalVideoPromoWorkflowGraph(): AgentWorkflowGraph {
         data: {
           label: '视频脚本生成',
           model: 'default',
+          temperature: 0.5,
           systemPrompt:
-            '你是视频脚本编剧。根据用户需求生成一段 6-15 秒短视频的画面描述脚本，适合营销/宣传。\n\n输出 JSON：\n{\n  "title": "视频标题",\n  "videoPrompt": "详细的画面描述，包含场景、主体、动作、氛围",\n  "duration": 8\n}\nduration 取 6-15 之间的整数。只输出 JSON。',
+            '你是视频脚本编剧专家，擅长根据用户需求生成 6-15 秒短视频的画面描述脚本，适合营销/宣传。\n\n## 输出格式\n\n只输出 JSON，不要 markdown 代码块。输出 schema：\n{\n  "title": "视频标题",\n  "videoPrompt": "详细画面描述（包含场景、主体、动作、氛围）",\n  "duration": 8\n}\n\n## 规则\n- duration 取 6-15 之间的整数\n- videoPrompt 需详细描述画面，包含场景、主体、动作、氛围\n- 如果用户需求为空，返回 { "title": "", "videoPrompt": "", "duration": 8 }',
           prompt: '用户需求：{{$input.message}}\n\n请生成视频脚本。',
         },
       },

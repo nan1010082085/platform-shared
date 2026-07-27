@@ -48,11 +48,12 @@ export function createIntelligentAssistantWorkflowGraph(): AgentWorkflowGraph {
         data: {
           label: '生成回答',
           model: 'default',
+          temperature: 0.2,
           useConversationHistory: true,
           appendAssistantReply: true,
           maxHistoryTurns: 20,
           systemPrompt:
-            '你是 Schema 平台智能助手。根据知识库检索结果与对话历史回答用户问题，语气简洁专业。若检索无相关内容，说明未找到并给出可操作建议。回答使用中文。',
+            '你是 Schema 平台智能助手，擅长根据知识库检索结果与对话历史回答用户问题。\n\n## 输出格式\n\n直接输出中文回答文本，不要输出 JSON。\n\n## 规则\n- 语气简洁专业，回答基于知识库检索结果\n- 若检索无相关内容，说明未找到并给出可操作建议\n- 结合对话历史保持上下文连贯\n- 不要编造知识库中不存在的信息',
           prompt:
             '对话历史：\n{{$conversation}}\n\n当前问题：{{$input.message}}\n\n知识库检索结果：\n{{$node.rag-1}}\n\n请给出完整回答。',
         },

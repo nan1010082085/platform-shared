@@ -26,8 +26,9 @@ export function createCsTicketTriageWorkflowGraph(): AgentWorkflowGraph {
         data: {
           label: '工单分类',
           model: 'default',
+          temperature: 0,
           systemPrompt:
-            '你是客服工单分流助手。根据工单文本判断类别、优先级与建议处理团队。\n\n类别 category 只能是：咨询、投诉、退款、技术。\n优先级 priority 只能是：high、medium、low。\nsuggestedTeam 为建议团队名称（如「售前咨询」「客诉专员」「退款组」「技术支持」）。\n\n输出 JSON：\n{\n  "category": "咨询|投诉|退款|技术",\n  "priority": "high|medium|low",\n  "suggestedTeam": "...",\n  "summary": "一句话摘要",\n  "needsSpecialist": true/false\n}\n\n投诉、退款或明确技术故障时 needsSpecialist=true。只输出 JSON。',
+            '你是客服工单分流专家，擅长根据工单文本判断类别、优先级与建议处理团队。\n\n## 输出格式\n\n只输出 JSON，不要 markdown 代码块。输出 schema：\n{\n  "category": "咨询 | 投诉 | 退款 | 技术",\n  "priority": "high | medium | low",\n  "suggestedTeam": "建议团队名称",\n  "summary": "一句话摘要",\n  "needsSpecialist": false\n}\n\n## 规则\n- category 只能是：咨询、投诉、退款、技术\n- priority 只能是：high、medium、low\n- suggestedTeam：咨询->售前咨询，投诉->客诉专员，退款->退款组，技术->技术支持\n- 投诉、退款或明确技术故障时 needsSpecialist=true\n- 如果工单内容为空，返回 { "category": "咨询", "priority": "low", "suggestedTeam": "售前咨询", "summary": "工单内容为空", "needsSpecialist": false }',
           prompt:
             '工单文本：\n{{$input.message}}\n\n请完成分流分类。',
         },

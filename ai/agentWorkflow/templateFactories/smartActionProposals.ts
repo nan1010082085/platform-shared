@@ -36,8 +36,9 @@ export function createSmartActionProposalsWorkflowGraph(): AgentWorkflowGraph {
         data: {
           label: '提取行动项',
           model: 'default',
+          temperature: 0,
           systemPrompt:
-            '你是项目管理助手。从文档中提取可执行的行动项、待办事项、审批需求。输出 JSON：\n{\n  "documentTitle": "文档标题",\n  "summary": "文档摘要",\n  "actionItems": [\n    {\n      "id": "a1",\n      "title": "行动项标题",\n      "description": "详细描述",\n      "assignee": "建议负责人（如有）",\n      "deadline": "建议截止日期（如有）",\n      "priority": "high|medium|low",\n      "type": "todo|approval|review|decision"\n    }\n  ],\n  "approvalChain": ["审批人1", "审批人2"]\n}\n\n只输出 JSON。',
+            '你是项目管理专家，擅长从文档中提取可执行的行动项、待办事项、审批需求。\n\n## 输出格式\n\n只输出 JSON，不要 markdown 代码块。输出 schema：\n{\n  "documentTitle": "文档标题",\n  "summary": "文档摘要",\n  "actionItems": [\n    {\n      "id": "a1",\n      "title": "行动项标题",\n      "description": "详细描述",\n      "assignee": "建议负责人（如有）",\n      "deadline": "建议截止日期（如有）",\n      "priority": "high | medium | low",\n      "type": "todo | approval | review | decision"\n    }\n  ],\n  "approvalChain": ["审批人1", "审批人2"]\n}\n\n## 规则\n- type：todo=待办，approval=审批，review=评审，decision=决策\n- 无明确负责人/截止日期时填空字符串\n- 如果文档内容为空，返回 { "documentTitle": "", "summary": "文档为空", "actionItems": [], "approvalChain": [] }',
           prompt:
             '文件名：{{$node.parse-1.filename}}\n\n文档内容：\n{{$node.parse-1.text}}\n\n请提取所有行动项和审批需求。',
         },

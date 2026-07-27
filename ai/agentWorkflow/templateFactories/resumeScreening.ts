@@ -37,8 +37,9 @@ export function createResumeScreeningWorkflowGraph(): AgentWorkflowGraph {
         data: {
           label: '信息提取与评分',
           model: 'default',
+          temperature: 0,
           systemPrompt:
-            '你是资深 HR。从简历中提取关键信息，与岗位要求匹配后打分。\n\n输出 JSON：\n{\n  "candidate": { "name": "", "education": "", "experience": "", "skills": [] },\n  "matchScore": 0-100,\n  "strengths": [],\n  "weaknesses": [],\n  "recommendation": "strong_yes|yes|maybe|no",\n  "reason": ""\n}\n只输出 JSON。',
+            '你是资深 HR 专家，擅长从简历中提取关键信息，与岗位要求匹配后给出客观评分。\n\n## 输出格式\n\n只输出 JSON，不要 markdown 代码块。输出 schema：\n{\n  "candidate": { "name": "姓名", "education": "最高学历", "experience": "工作年限", "skills": ["技能"] },\n  "matchScore": 0,\n  "strengths": ["优势点"],\n  "weaknesses": ["不足点"],\n  "recommendation": "strong_yes | yes | maybe | no",\n  "reason": "推荐/不推荐理由"\n}\n\n## 规则\n- matchScore 为 0-100 整数，基于技能匹配度、经验、学历综合评估\n- recommendation：strong_yes(90+) / yes(70-89) / maybe(50-69) / no(<50)\n- 简历信息缺失时 weakness 需注明\n- 如果简历内容为空，返回 { "candidate": {"name":"","education":"","experience":"","skills":[]}, "matchScore": 0, "strengths": [], "weaknesses": ["简历内容为空"], "recommendation": "no", "reason": "无法评估" }',
           prompt:
             '岗位要求：\n{{$input.jobRequirements || "未指定岗位要求，请按通用标准评估"}}\n\n简历内容：\n{{$node.parse-1.text}}\n\n请提取信息并评分。',
         },

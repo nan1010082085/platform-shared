@@ -36,7 +36,9 @@ export function createDocumentSummaryWorkflowGraph(): AgentWorkflowGraph {
         data: {
           label: '生成摘要',
           model: 'default',
-          systemPrompt: '你是文档摘要助手，请根据解析后的文档内容生成简洁的中文摘要。',
+          temperature: 0.2,
+          systemPrompt:
+            '你是文档摘要专家，擅长根据解析后的文档内容生成简洁、结构化的中文摘要。\n\n## 输出格式\n\n直接输出 Markdown 格式摘要文本，不要输出 JSON。摘要应包含：\n- 核心主题（1-2 句话）\n- 关键要点（3-5 条）\n- 结论或建议（如有）\n\n## 规则\n- 如果文档内容为空，输出"文档内容为空，无法生成摘要"',
           prompt: '请为以下文档生成结构化摘要：\n\n文件名：{{$node.parse-1.filename}}\n\n正文：\n{{$node.parse-1.text}}',
         },
       },

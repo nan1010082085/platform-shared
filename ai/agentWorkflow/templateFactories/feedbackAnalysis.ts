@@ -22,7 +22,8 @@ export function createFeedbackAnalysisWorkflowGraph(): AgentWorkflowGraph {
         data: {
           label: '反馈数据汇总',
           model: 'default',
-          systemPrompt: '你从上下文中获取客户反馈数据，整理为结构化列表。如果上下文没有数据，提示用户输入反馈内容。',
+          temperature: 0.2,
+          systemPrompt: '你是数据整理助手。从上下文中获取客户反馈数据，整理为结构化列表。如果上下文没有数据，提示用户输入反馈内容。直接输出整理后的文本，不要输出 JSON。',
           prompt: '请整理以下客户反馈数据：\n\n{{$input.message}}',
         },
       },
@@ -33,8 +34,9 @@ export function createFeedbackAnalysisWorkflowGraph(): AgentWorkflowGraph {
         data: {
           label: '情感与主题分析',
           model: 'default',
+          temperature: 0,
           systemPrompt:
-            '你是数据分析专家。对客户反馈进行情感分类和主题提取。\n\n输出 JSON：\n{\n  "summary": { "total": 0, "positive": 0, "neutral": 0, "negative": 0 },\n  "topThemes": [{"theme": "", "count": 0, "sentiment": ""}],\n  "insights": [],\n  "actionItems": []\n}\n只输出 JSON。',
+            '你是客户反馈分析专家，擅长对客户反馈进行情感分类和主题提取。\n\n## 输出格式\n\n只输出 JSON，不要 markdown 代码块。输出 schema：\n{\n  "summary": { "total": 0, "positive": 0, "neutral": 0, "negative": 0 },\n  "topThemes": [{"theme": "主题名", "count": 0, "sentiment": "positive | neutral | negative"}],\n  "insights": ["关键洞察"],\n  "actionItems": ["行动建议"]\n}\n\n## 规则\n- summary 各计数为整数，total = positive + neutral + negative\n- topThemes 按出现频率排序，最多 10 个主题\n- 如果反馈数据为空，返回 { "summary": {"total":0,"positive":0,"neutral":0,"negative":0}, "topThemes": [], "insights": [], "actionItems": [] }',
           prompt: '客户反馈数据：\n{{$node.rag-1.text}}\n\n请进行情感分析和主题提取。',
         },
       },

@@ -26,8 +26,9 @@ export function createFaqQualityCheckWorkflowGraph(): AgentWorkflowGraph {
         data: {
           label: 'FAQ 质检',
           model: 'default',
+          temperature: 0,
           systemPrompt:
-            '你是 FAQ 质检员。检查问答对的准确性、完整性与表述清晰度。\n\n输出 JSON：\n{\n  "passed": true|false,\n  "accuracy": 0.0-1.0,\n  "completeness": 0.0-1.0,\n  "clarity": 0.0-1.0,\n  "issues": [],\n  "suggestedAnswer": ""\n}\n存在明显问题或任一维度低于 0.6 时 passed=false。只输出 JSON。',
+            '你是 FAQ 质检专家，擅长检查问答对的准确性、完整性与表述清晰度。\n\n## 输出格式\n\n只输出 JSON，不要 markdown 代码块。输出 schema：\n{\n  "passed": boolean,\n  "accuracy": 0.0,\n  "completeness": 0.0,\n  "clarity": 0.0,\n  "issues": ["问题描述"],\n  "suggestedAnswer": "建议答案（如有修改建议）"\n}\n\n## 规则\n- accuracy/completeness/clarity 均为 0.0-1.0 浮点数\n- 任一维度低于 0.6 或存在明显问题时 passed=false\n- 如果 FAQ 内容为空，返回 { "passed": false, "accuracy": 0, "completeness": 0, "clarity": 0, "issues": ["FAQ内容为空"], "suggestedAnswer": "" }',
           prompt: 'FAQ 条目：\n{{$input.faq}}\n\n请进行质检。',
         },
       },

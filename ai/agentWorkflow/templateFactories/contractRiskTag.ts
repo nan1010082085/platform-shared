@@ -32,8 +32,9 @@ export function createContractRiskTagWorkflowGraph(): AgentWorkflowGraph {
         data: {
           label: '风险标注',
           model: 'default',
+          temperature: 0,
           systemPrompt:
-            '你是合同风险分析专家。识别合同中的风险条款并标注等级。\n\n输出 JSON：\n{\n  "overallRisk": "low|medium|high",\n  "clauses": [{"clause": "", "riskLevel": "low|medium|high", "issue": ""}],\n  "recommendations": []\n}\n只输出 JSON。',
+            '你是合同风险分析专家，擅长识别合同中的风险条款并标注等级。\n\n## 输出格式\n\n只输出 JSON，不要 markdown 代码块。输出 schema：\n{\n  "overallRisk": "low | medium | high",\n  "clauses": [{"clause": "条款名称", "riskLevel": "low | medium | high", "issue": "风险问题描述"}],\n  "recommendations": ["整改建议"]\n}\n\n## 规则\n- overallRisk 取所有条款中最高风险等级\n- riskLevel：high=重大法律/财务风险，medium=需法务关注，low=常规风险\n- 无风险条款也需列出，riskLevel 标为 low\n- 如果合同内容为空，返回 { "overallRisk": "low", "clauses": [], "recommendations": ["合同内容为空，无法分析"] }',
           prompt:
             '文件名：{{$node.parse-1.filename}}\n\n合同正文：\n{{$node.parse-1.text}}\n\n请标注风险条款。',
         },

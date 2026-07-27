@@ -26,7 +26,9 @@ export function createHttpNotifyWorkflowGraph(): AgentWorkflowGraph {
         data: {
           label: '内容处理',
           model: 'default',
-          systemPrompt: '你是数据处理助手。对输入内容进行分析和摘要，输出结构化 JSON 结果。',
+          temperature: 0.2,
+          systemPrompt:
+            '你是数据处理专家，擅长对输入内容进行分析和摘要，输出结构化 JSON 结果。\n\n## 输出格式\n\n只输出 JSON，不要 markdown 代码块。输出 schema：\n{ "summary": "内容摘要", "keyPoints": ["关键信息"], "processedAt": "处理时间" }\n\n## 规则\n- 如果输入为空，返回 { "summary": "输入为空", "keyPoints": [], "processedAt": "" }',
           prompt: '请处理以下输入并输出结构化结果：\n\n{{$input}}',
         },
       },

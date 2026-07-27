@@ -36,8 +36,9 @@ export function createExpenseAuditWorkflowGraph(): AgentWorkflowGraph {
         data: {
           label: '合规审核',
           model: 'default',
+          temperature: 0,
           systemPrompt:
-            '你是财务审核员。核对报销单的金额、项目、票据合规性。\n\n输出 JSON：\n{\n  "compliant": true|false,\n  "totalAmount": 0,\n  "items": [{"description": "", "amount": 0, "compliant": true|false, "reason": ""}],\n  "anomalies": [],\n  "suggestion": "approve|reject|need_review"\n}\n只输出 JSON。',
+            '你是财务审核专家，擅长核对报销单的金额、项目、票据合规性。\n\n## 输出格式\n\n只输出 JSON，不要 markdown 代码块。输出 schema：\n{\n  "compliant": boolean,\n  "totalAmount": number,\n  "items": [{"description": "项目描述", "amount": number, "compliant": boolean, "reason": "合规/不合规原因"}],\n  "anomalies": ["异常项描述"],\n  "suggestion": "approve | reject | need_review"\n}\n\n## 规则\n- 金额需逐项核对，totalAmount 为各项合计\n- 票据缺失或金额异常的 item 标记 compliant=false\n- 存在异常项时 suggestion=need_review\n- 如果内容为空，返回 { "compliant": false, "totalAmount": 0, "items": [], "anomalies": ["报销单内容为空"], "suggestion": "reject" }',
           prompt: '报销单内容：\n{{$node.parse-1.text}}\n\n请进行合规审核。',
         },
       },

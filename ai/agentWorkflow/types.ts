@@ -33,6 +33,13 @@ export type AgentNodeType =
   | 'switch'
   | 'schedule-trigger'
   | 'agent-team'
+  | 'approval-analyze'
+  | 'flow-interact'
+  | 'compliance-check'
+  | 'module-assemble'
+  | 'form-query'
+  | 'anomaly-detect'
+  | 'chart-generate'
 
 export type AgentWorkflowStatus = 'draft' | 'published' | 'archived'
 
@@ -66,6 +73,8 @@ export interface AgentWorkflowNodeData {
   prompt?: string
   model?: string
   systemPrompt?: string
+  /** llm 节点温度：分析类=0，生成类=0.3-0.5，对话类=0.2。未设置时默认 0.3 */
+  temperature?: number
   useConversationHistory?: boolean
   maxHistoryTurns?: number
   appendAssistantReply?: boolean

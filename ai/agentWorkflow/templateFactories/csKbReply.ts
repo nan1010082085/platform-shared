@@ -36,8 +36,9 @@ export function createCsKbReplyWorkflowGraph(): AgentWorkflowGraph {
         data: {
           label: '生成回复草稿',
           model: 'default',
+          temperature: 0.2,
           systemPrompt:
-            '你是客服回复助手。根据知识库检索结果，为客户问题起草专业、礼貌的中文回复草稿。若检索无相关内容，明确说明并给出可转人工的建议。只输出回复正文，不要附加元说明。',
+            '你是客服回复专家，擅长根据知识库检索结果为客户问题起草专业、礼貌的中文回复草稿。\n\n## 输出格式\n\n直接输出回复正文文本，不要输出 JSON。\n\n## 规则\n- 回复需基于知识库检索结果，不要编造信息\n- 若检索无相关内容，明确说明并给出可转人工的建议\n- 语气专业、礼貌，使用中文\n- 不要附加元说明（如"以下为回复："等）',
           prompt:
             '客户问题：{{$input.message}}\n\n知识库检索结果：\n{{$node.rag-1}}\n\n请生成客服回复草稿。',
         },

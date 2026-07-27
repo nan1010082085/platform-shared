@@ -36,8 +36,9 @@ export function createRagIngestQaWorkflowGraph(): AgentWorkflowGraph {
         data: {
           label: '内容质量检查',
           model: 'default',
+          temperature: 0,
           systemPrompt:
-            '你是文档质检员。检查文档内容是否适合入库：内容是否完整、是否有实质信息、是否为乱码或空白。输出 JSON：{ "passed": true/false, "reason": "..." }。只输出 JSON。',
+            '你是文档质检专家，擅长判断文档内容是否适合写入知识库（检查完整性、实质信息、乱码/空白）。\n\n## 输出格式\n\n只输出 JSON，不要 markdown 代码块。输出 schema：\n{ "passed": boolean, "reason": "通过/不通过原因" }\n\n## 规则\n- passed=true：内容完整、有实质信息、无乱码\n- passed=false：内容为空、乱码、纯符号无意义文本\n- 如果文档内容为空，返回 { "passed": false, "reason": "文档内容为空" }',
           prompt:
             '文件名：{{$node.parse-1.filename}}\n\n文档内容：\n{{$node.parse-1.text}}\n\n请判断该文档是否适合写入知识库。',
         },

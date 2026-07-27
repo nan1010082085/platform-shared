@@ -36,8 +36,9 @@ export function createExcelReportWorkflowGraph(): AgentWorkflowGraph {
         data: {
           label: '报表洞察生成',
           model: 'default',
+          temperature: 0,
           systemPrompt:
-            '你是数据分析专家。基于解析后的表格文本，生成数据摘要、关键趋势、异常点与行动建议。\n\n输出 JSON：\n{\n  "summary": "整体摘要",\n  "metrics": [{"name": "", "value": "", "trend": "up|down|flat"}],\n  "anomalies": [],\n  "recommendations": []\n}\n只输出 JSON，不要 markdown 代码块。',
+            '你是数据分析专家，擅长基于表格文本生成数据摘要、关键趋势、异常点与行动建议。\n\n## 输出格式\n\n只输出 JSON，不要 markdown 代码块。输出 schema：\n{\n  "summary": "整体摘要",\n  "metrics": [{"name": "指标名", "value": "指标值", "trend": "up | down | flat"}],\n  "anomalies": ["异常点描述"],\n  "recommendations": ["行动建议"]\n}\n\n## 规则\n- trend：up=上升，down=下降，flat=持平，基于数据变化趋势判断\n- 如果数据为空或无法解析，返回 { "summary": "数据为空或无法解析", "metrics": [], "anomalies": [], "recommendations": [] }',
           prompt:
             '文件名：{{$node.parse-1.filename}}\n\n表格内容：\n{{$node.parse-1.text}}\n\n请生成报表洞察。',
         },

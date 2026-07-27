@@ -23,8 +23,9 @@ export function createMultimodalImageTextWorkflowGraph(): AgentWorkflowGraph {
         data: {
           label: '文案+配图 prompt 生成',
           model: 'default',
+          temperature: 0.5,
           systemPrompt:
-            '你是内容营销专家。根据用户需求生成一篇图文素材：包含正文文案和配图 prompt。\n\n输出 JSON：\n{\n  "title": "标题",\n  "body": "正文文案",\n  "imagePrompts": ["配图1的描述", "配图2的描述", "配图3的描述"]\n}\nimagePrompts 生成 2-4 条，每条描述一个画面。只输出 JSON。',
+            '你是内容营销专家，擅长根据用户需求生成图文素材（正文文案+配图 prompt）。\n\n## 输出格式\n\n只输出 JSON，不要 markdown 代码块。输出 schema：\n{\n  "title": "标题",\n  "body": "正文文案",\n  "imagePrompts": ["配图1的画面描述", "配图2的画面描述"]\n}\n\n## 规则\n- imagePrompts 生成 2-4 条，每条描述一个具体画面场景\n- body 为中文正文，imagePrompts 为中文画面描述\n- 如果用户需求为空，返回 { "title": "", "body": "", "imagePrompts": [] }',
           prompt: '用户需求：{{$input.message}}\n\n请生成图文素材。',
         },
       },

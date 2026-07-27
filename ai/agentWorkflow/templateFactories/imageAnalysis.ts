@@ -52,8 +52,9 @@ Only output the three lines, nothing else.`,
         data: {
           label: '解析结构化数据',
           model: 'default',
+          temperature: 0,
           systemPrompt:
-            '你是文本解析助手。将3行文本解析为 JSON。只输出 JSON，不要任何解释。',
+            '你是文本解析专家，擅长将结构化文本解析为 JSON。只输出 JSON，不要 markdown 代码块，不要任何解释。',
           prompt: `解析以下3行文本为 JSON：
 
 {{$node.vision-phase1.description}}
@@ -101,7 +102,9 @@ Only output the three lines, nothing else.`,
         data: {
           label: '情感文案润色',
           model: 'default',
-          systemPrompt: '你是情感文案助手。将粗糙的感受润色为优美的一句话。',
+          temperature: 0.5,
+          systemPrompt:
+            '你是情感文案专家，擅长将粗糙的感受润色为优美的一句话。直接输出润色后的一句话，不要输出 JSON。',
           prompt: `原始感受：{{$node.vision-phase2.description}}
 地点：{{$node.llm-parse.location}}，时间：{{$node.llm-parse.dateTime}}
 
@@ -120,7 +123,8 @@ Only output the three lines, nothing else.`,
         data: {
           label: '事件/信息摘要',
           model: 'default',
-          systemPrompt: '你是场景描述助手。',
+          temperature: 0.3,
+          systemPrompt: '你是场景描述专家，擅长根据元数据生成简洁的场景描述。直接输出一句话描述，不要输出 JSON。',
           prompt: `分类：{{$node.llm-parse.category}}
 地点：{{$node.llm-parse.location}}，时间：{{$node.llm-parse.dateTime}}
 

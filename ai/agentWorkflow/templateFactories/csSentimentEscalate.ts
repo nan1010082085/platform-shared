@@ -26,8 +26,9 @@ export function createCsSentimentEscalateWorkflowGraph(): AgentWorkflowGraph {
         data: {
           label: '情绪分析',
           model: 'default',
+          temperature: 0,
           systemPrompt:
-            '你是客服情绪分析助手。判断客户消息的情绪倾向与是否需要人工升级。\n\n输出 JSON：\n{\n  "sentiment": "positive|neutral|negative",\n  "score": 0.0-1.0,\n  "reason": "简要理由",\n  "needsEscalation": true/false\n}\n\nsentiment=negative 或出现强烈不满/威胁投诉时 needsEscalation=true。只输出 JSON。',
+            '你是客服情绪分析专家，擅长判断客户消息的情绪倾向与是否需要人工升级处理。\n\n## 输出格式\n\n只输出 JSON，不要 markdown 代码块。输出 schema：\n{\n  "sentiment": "positive | neutral | negative",\n  "score": 0.0,\n  "reason": "情绪判断理由（简要）",\n  "needsEscalation": false\n}\n\n## 规则\n- score 为 0.0-1.0 浮点数，表示负面情绪强度（1.0=极度负面）\n- sentiment=negative 或出现强烈不满/威胁投诉时 needsEscalation=true\n- positive 消息 needsEscalation 必须为 false\n- 如果消息为空，返回 { "sentiment": "neutral", "score": 0.0, "reason": "消息为空", "needsEscalation": false }',
           prompt: '客户消息：\n{{$input.message}}\n\n请分析情绪。',
         },
       },

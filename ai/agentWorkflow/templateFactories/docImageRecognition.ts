@@ -53,8 +53,9 @@ export function createDocImageRecognitionWorkflowGraph(): AgentWorkflowGraph {
         data: {
           label: '图片结构化识别',
           model: 'default',
+          temperature: 0,
           systemPrompt:
-            '你是图片识别助手。结合 OCR 文本与视觉描述，输出 JSON：{ "type": "image", "filename": "...", "summary": "...", "visualDescription": "...", "fields": [], "tables": [] }。只输出 JSON。',
+            '你是图片识别专家，擅长结合 OCR 文本与视觉描述输出结构化信息。\n\n## 输出格式\n\n只输出 JSON，不要 markdown 代码块。输出 schema：\n{ "type": "image", "filename": "文件名", "summary": "图片摘要", "visualDescription": "视觉描述", "fields": ["识别到的字段"], "tables": ["表格内容"] }\n\n## 规则\n- 如果 OCR 和视觉描述都为空，所有字段填空字符串或空数组',
           prompt:
             'OCR 文本：{{$node.parse-1.text}}\n\n视觉描述：{{$node.vision-1.description}}\n\n请输出结构化 JSON。',
         },
@@ -66,8 +67,9 @@ export function createDocImageRecognitionWorkflowGraph(): AgentWorkflowGraph {
         data: {
           label: '文档结构化提取',
           model: 'default',
+          temperature: 0,
           systemPrompt:
-            '你是文档解析助手。根据文档正文，输出 JSON：{ "type": "document", "filename": "...", "summary": "...", "sections": [{"title":"","content":""}], "keyPoints": [] }。只输出 JSON，不要 markdown 代码块。',
+            '你是文档解析专家，擅长根据文档正文提取章节摘要与关键信息。\n\n## 输出格式\n\n只输出 JSON，不要 markdown 代码块。输出 schema：\n{ "type": "document", "filename": "文件名", "summary": "文档摘要", "sections": [{"title": "章节标题", "content": "章节内容"}], "keyPoints": ["关键信息"] }\n\n## 规则\n- 如果文档内容为空，返回 { "type": "document", "filename": "", "summary": "文档为空", "sections": [], "keyPoints": [] }',
           prompt:
             '文件名：{{$node.parse-1.filename}}\n\n解析结果：\n{{$node.parse-1.text}}\n\n请提取章节摘要与关键信息。',
         },

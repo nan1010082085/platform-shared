@@ -36,8 +36,9 @@ export function createStructuredExtractWorkflowGraph(): AgentWorkflowGraph {
         data: {
           label: '字段结构化提取',
           model: 'default',
+          temperature: 0,
           systemPrompt:
-            '你是信息提取专家。从文档中按指定字段提取结构化数据，输出 JSON 对象。字段缺失时填 null，不要编造。只输出 JSON，不要 markdown 代码块。',
+            '你是信息提取专家，擅长从文档中按指定字段 schema 提取结构化数据。\n\n## 输出格式\n\n只输出 JSON 对象，不要 markdown 代码块。字段缺失时填 null，不要编造。\n\n## 规则\n- 严格按照用户提供的 schema 字段提取，不多不少\n- 数值字段用 number，日期字段用 "YYYY-MM-DD" 格式，布尔字段用 boolean\n- 如果文档内容为空，所有字段填 null\n- 如果未提供 schema，提取文档中所有可识别的关键信息',
           prompt:
             '文件名：{{$node.parse-1.filename}}\n\n文档内容：\n{{$node.parse-1.text}}\n\n提取字段 schema：{{$input.schema}}\n\n请输出结构化 JSON。',
         },

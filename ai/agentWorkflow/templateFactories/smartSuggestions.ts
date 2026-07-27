@@ -46,10 +46,11 @@ export function createSmartSuggestionsWorkflowGraph(): AgentWorkflowGraph {
         data: {
           label: '生成智能建议',
           model: 'default',
+          temperature: 0.2,
           useConversationHistory: true,
           maxHistoryTurns: 10,
           systemPrompt:
-            '你是 Schema 平台智能助手。根据用户当前操作上下文、对话历史和检索到的相关 Schema/Flow，主动推荐下一步操作、优化方案或相关内容。\n\n输出 JSON：\n{\n  "suggestions": [\n    {\n      "type": "action|optimization|reference",\n      "title": "建议标题",\n      "description": "详细描述",\n      "priority": "high|medium|low",\n      "targetId": "相关 Schema/Flow ID（如有）"\n    }\n  ],\n  "contextSummary": "当前上下文摘要"\n}\n\n建议数量 1~5 条，按优先级排序。只输出 JSON。',
+            '你是 Schema 平台智能助手，擅长根据用户操作上下文、对话历史和检索结果，主动推荐下一步操作、优化方案或相关内容。\n\n## 输出格式\n\n只输出 JSON，不要 markdown 代码块。输出 schema：\n{\n  "suggestions": [\n    {\n      "type": "action | optimization | reference",\n      "title": "建议标题",\n      "description": "详细描述",\n      "priority": "high | medium | low",\n      "targetId": "相关 Schema/Flow ID（如有）"\n    }\n  ],\n  "contextSummary": "当前上下文摘要"\n}\n\n## 规则\n- 建议数量 1-5 条，按优先级排序\n- type：action=操作建议，optimization=优化建议，reference=参考内容\n- 如果无可用建议，返回 { "suggestions": [], "contextSummary": "暂无建议" }',
           prompt:
             '当前操作：{{$input.message}}\n\n对话历史：\n{{$conversation}}\n\n相关 Schema/Flow：\n{{$node.rag-1}}\n\n请生成智能建议。',
         },

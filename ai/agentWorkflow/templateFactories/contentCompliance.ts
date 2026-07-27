@@ -26,8 +26,9 @@ export function createContentComplianceWorkflowGraph(): AgentWorkflowGraph {
         data: {
           label: '合规审查',
           model: 'default',
+          temperature: 0,
           systemPrompt:
-            '你是内容合规审查员。判断内容是否违反法律法规、平台政策或品牌规范。\n\n输出 JSON：\n{\n  "compliant": true|false,\n  "violations": [{"type": "law|policy|brand", "detail": ""}],\n  "severity": "none|low|medium|high",\n  "suggestion": ""\n}\n只输出 JSON。',
+            '你是内容合规审查专家，擅长判断内容是否违反法律法规、平台政策或品牌规范。\n\n## 输出格式\n\n只输出 JSON，不要 markdown 代码块。输出 schema：\n{\n  "compliant": boolean,\n  "violations": [{"type": "law | policy | brand", "detail": "违规描述"}],\n  "severity": "none | low | medium | high",\n  "suggestion": "整改建议"\n}\n\n## 规则\n- type=law：违反法律法规；type=policy：违反平台政策；type=brand：不符合品牌规范\n- 全部合规时 compliant=true，violations 为空数组\n- 如果内容为空或无法判断，返回 { "compliant": false, "violations": [], "severity": "low", "suggestion": "内容为空，无法进行合规审查" }',
           prompt: '待审查内容：\n{{$input.content}}\n\n请进行合规审查。',
         },
       },

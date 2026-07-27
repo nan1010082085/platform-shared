@@ -32,8 +32,9 @@ export function createPptGenerationWorkflowGraph(): AgentWorkflowGraph {
         data: {
           label: '生成 PPT 大纲',
           model: 'default',
+          temperature: 0.3,
           systemPrompt:
-            '你是演示文稿设计专家。根据用户需求生成 PPT 大纲。输出 JSON：\n{\n  "title": "演示文稿标题",\n  "template": "business|tech|education|creative",\n  "totalSlides": 10,\n  "slides": [\n    {\n      "index": 1,\n      "type": "title|content|chart|comparison|summary",\n      "heading": "页面标题",\n      "keyPoints": ["要点1", "要点2"],\n      "speakerNotes": "演讲者备注"\n    }\n  ]\n}\n\n页数控制在 8~15 页。只输出 JSON。',
+            '你是演示文稿设计专家，擅长根据用户需求生成 PPT 大纲。\n\n## 输出格式\n\n只输出 JSON，不要 markdown 代码块。输出 schema：\n{\n  "title": "演示文稿标题",\n  "template": "business | tech | education | creative",\n  "totalSlides": 10,\n  "slides": [\n    {\n      "index": 1,\n      "type": "title | content | chart | comparison | summary",\n      "heading": "页面标题",\n      "keyPoints": ["要点1", "要点2"],\n      "speakerNotes": "演讲者备注"\n    }\n  ]\n}\n\n## 规则\n- 页数控制在 8-15 页\n- 第一页 type=title，最后一页 type=summary\n- 如果用户需求为空，生成通用商务模板大纲',
           prompt: '用户需求：{{$input.message}}\n\n对话上下文：\n{{$conversation}}\n\n请生成 PPT 大纲。',
         },
       },
@@ -44,8 +45,9 @@ export function createPptGenerationWorkflowGraph(): AgentWorkflowGraph {
         data: {
           label: '生成每页详细内容',
           model: 'default',
+          temperature: 0.3,
           systemPrompt:
-            '你是演示文稿内容专家。根据大纲为每一页生成详细的文案内容。输出 JSON：\n{\n  "title": "演示文稿标题",\n  "slides": [\n    {\n      "index": 1,\n      "type": "title",\n      "heading": "标题",\n      "subtitle": "副标题",\n      "content": ["要点1详细内容", "要点2详细内容"],\n      "speakerNotes": "演讲者备注",\n      "layout": "center|left|two-column|full-image"\n    }\n  ]\n}\n\n每页 content 不超过 5 个要点，每点不超过 50 字。只输出 JSON。',
+            '你是演示文稿内容专家，擅长根据大纲为每一页生成详细的文案内容。\n\n## 输出格式\n\n只输出 JSON，不要 markdown 代码块。输出 schema：\n{\n  "title": "演示文稿标题",\n  "slides": [\n    {\n      "index": 1,\n      "type": "title",\n      "heading": "标题",\n      "subtitle": "副标题",\n      "content": ["要点1详细内容", "要点2详细内容"],\n      "speakerNotes": "演讲者备注",\n      "layout": "center | left | two-column | full-image"\n    }\n  ]\n}\n\n## 规则\n- 每页 content 不超过 5 个要点，每点不超过 50 字\n- 保持与大纲一致的页数和结构',
           prompt: 'PPT 大纲：\n{{$node.llm-outline}}\n\n请生成每页详细内容。',
         },
       },
