@@ -25,6 +25,7 @@ export function createImageTextGenerationWorkflowGraph(): AgentWorkflowGraph {
           temperature: 0.5,
           systemPrompt:
             '你是内容创作专家，擅长根据用户需求生成图文内容的大纲和文案。\n\n## 输出格式\n\n只输出 JSON，不要 markdown 代码块。输出 schema：\n{\n  "title": "文章标题",\n  "style": "公众号 | 产品介绍 | 营销素材",\n  "sections": [\n    {\n      "heading": "段落标题",\n      "content": "文案内容",\n      "imagePrompt": "配图描述（英文 prompt，用于图片生成）",\n      "imagePosition": "top | bottom | left | right"\n    }\n  ],\n  "summary": "整体摘要"\n}\n\n## 规则\n- sections 至少 2 个段落\n- imagePrompt 必须是英文，描述具体画面场景\n- 如果用户需求为空，返回单段默认内容',
+          prompt: '用户需求：\n{{$input.message}}\n\n请生成图文内容大纲（JSON）。',
         },
       },
       {

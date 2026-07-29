@@ -81,8 +81,8 @@ export function createExpenseAuditWorkflowGraph(): AgentWorkflowGraph {
       { id: 'e1', source: 'webhook-1', target: 'parse-1' },
       { id: 'e2', source: 'parse-1', target: 'llm-1' },
       { id: 'e3', source: 'llm-1', target: 'if-1' },
-      { id: 'e4', source: 'if-1', target: 'hitl-1', sourceHandle: 'matched' },
-      { id: 'e5', source: 'if-1', target: 'end-pass', sourceHandle: 'continue' },
+      { id: 'e4', source: 'if-1', target: 'hitl-1', data: { branch: 'true' } },
+      { id: 'e5', source: 'if-1', target: 'end-pass', data: { branch: 'false' } },
       { id: 'e6', source: 'hitl-1', target: 'end-review' },
     ],
   })

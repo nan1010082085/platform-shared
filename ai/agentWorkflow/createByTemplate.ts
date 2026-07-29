@@ -35,6 +35,10 @@ import { createMultimodalVideoPromoWorkflowGraph } from './templateFactories/mul
 import { createResumeScreeningWorkflowGraph } from './templateFactories/resumeScreening.js'
 import { createExpenseAuditWorkflowGraph } from './templateFactories/expenseAudit.js'
 import { createFeedbackAnalysisWorkflowGraph } from './templateFactories/feedbackAnalysis.js'
+import { createMemoryAssistantWorkflowGraph } from './templateFactories/memoryAssistant.js'
+import { createMedicalRecordExtractWorkflowGraph } from './templateFactories/medicalRecordExtract.js'
+import { createEducationHomeworkGradingWorkflowGraph } from './templateFactories/educationHomeworkGrading.js'
+import { createManufacturingQualityReportWorkflowGraph } from './templateFactories/manufacturingQualityReport.js'
 
 export function createAgentWorkflowGraphByTemplate(
   templateId: AgentWorkflowTemplateId,
@@ -100,6 +104,14 @@ export function createAgentWorkflowGraphByTemplate(
       return createExpenseAuditWorkflowGraph()
     case 'feedback-analysis':
       return createFeedbackAnalysisWorkflowGraph()
+    case 'memory-assistant':
+      return createMemoryAssistantWorkflowGraph()
+    case 'medical-record-extract':
+      return createMedicalRecordExtractWorkflowGraph()
+    case 'education-homework-grading':
+      return createEducationHomeworkGradingWorkflowGraph()
+    case 'manufacturing-quality-report':
+      return createManufacturingQualityReportWorkflowGraph()
     case 'blank':
     default:
       return createDefaultAgentWorkflowGraph()
