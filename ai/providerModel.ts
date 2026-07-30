@@ -35,8 +35,9 @@ export interface ProviderWithMaskedKey extends Provider {
  * - image: 图像生成
  * - video: 视频生成
  * - audio: 音频转录 / 语音
+ * - vision: 图像理解（多模态输入，看图说话/图表分析/OCR）
  */
-export type ModelCapability = 'chat' | 'image' | 'video' | 'audio'
+export type ModelCapability = 'chat' | 'image' | 'video' | 'audio' | 'vision'
 
 export interface ModelParameters {
   temperature?: number

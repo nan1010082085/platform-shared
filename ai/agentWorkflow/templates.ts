@@ -42,6 +42,14 @@ export type AgentWorkflowTemplateId =
   | 'retail-inventory-forecast'
   | 'finance-loan-review'
   | 'energy-consumption-report'
+  | 'vote-decision'
+  | 'multimodal-llm-analyze'
+  | 'smart-form-search'
+  | 'scheduled-report'
+  | 'code-execute-demo'
+  | 'switch-demo'
+  | 'parallel-team-demo'
+  | 'dashboard-assist'
 
 export interface AgentWorkflowTemplateMeta {
   id: AgentWorkflowTemplateId
@@ -372,5 +380,69 @@ export const AGENT_WORKFLOW_TEMPLATES: AgentWorkflowTemplateMeta[] = [
     category: 'energy',
     icon: 'data-analysis',
     tags: ['energy', 'consumption', 'analysis', 'report'],
+  },
+  {
+    id: 'vote-decision',
+    name: '团队投票决策',
+    description: '多成员对同一问题各出方案，supervisor 仲裁选最佳或综合（agent-team vote 模式）',
+    category: 'assistant',
+    icon: 'user',
+    tags: ['multi-agent', 'vote', 'decision'],
+  },
+  {
+    id: 'multimodal-llm-analyze',
+    name: '多模态图文分析',
+    description: '上传图片 + 文字描述，llm 节点图文混合分析（attachImages 注入 image_url，需 vision 模型）',
+    category: 'general',
+    icon: 'picture',
+    tags: ['multimodal', 'vision', 'image', 'llm'],
+  },
+  {
+    id: 'smart-form-search',
+    name: '智能表单检索',
+    description: 'agent-loop 配 rag__search 工具，按字段/组件类型结构化检索已有表单（VR-4 垂直检索演示）',
+    category: 'assistant',
+    icon: 'search',
+    tags: ['rag', 'search', 'form', 'structured'],
+  },
+  {
+    id: 'scheduled-report',
+    name: '定时数据报告',
+    description: 'schedule-trigger 每天 9 点触发 -> LLM 生成数据日报（定时触发演示）',
+    category: 'integration',
+    icon: 'alarm-clock',
+    tags: ['schedule', 'cron', 'report', 'automation'],
+  },
+  {
+    id: 'code-execute-demo',
+    name: '代码执行演示',
+    description: 'code-execute 节点沙箱执行 JavaScript，对输入数据做变换/计算（代码执行演示）',
+    category: 'general',
+    icon: 'document',
+    tags: ['code', 'execute', 'javascript', 'sandbox'],
+  },
+  {
+    id: 'switch-demo',
+    name: '条件分支演示',
+    description: 'switch 节点按输入匹配分支，不同分支走不同 LLM 处理（流程控制演示）',
+    category: 'general',
+    icon: 'connection',
+    tags: ['switch', 'branch', 'conditional', 'workflow'],
+  },
+  {
+    id: 'parallel-team-demo',
+    name: '并行团队分析',
+    description: 'supervisor 自动拆解子任务，多成员并行执行后合成结论（agent-team parallel 模式）',
+    category: 'assistant',
+    icon: 'user',
+    tags: ['multi-agent', 'parallel', 'team'],
+  },
+  {
+    id: 'dashboard-assist',
+    name: 'Dashboard Assist',
+    description: 'AI assistant for dashboard layout, chart selection, and color scheme',
+    category: 'general',
+    icon: 'data-analysis',
+    tags: ['dashboard', 'ai', 'layout', 'chart'],
   },
 ]

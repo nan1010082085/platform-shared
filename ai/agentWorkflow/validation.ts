@@ -38,7 +38,7 @@ export function validateAgentWorkflowGraph(graph: AgentWorkflowGraph): AgentWork
       issues.push({ level: 'error', message: `连线 ${edge.id} 引用了不存在的节点` })
     }
   }
-  const triggers = graph.nodes.filter((n) => n.type === 'manual-trigger' || n.type === 'webhook-trigger')
+  const triggers = graph.nodes.filter((n) => n.type === 'manual-trigger' || n.type === 'webhook-trigger' || n.type === 'schedule-trigger')
   if (triggers.length === 0) {
     issues.push({ level: 'error', message: '需要至少一个触发节点（手动或 Webhook）' })
   }

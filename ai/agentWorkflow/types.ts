@@ -82,6 +82,10 @@ export interface AgentWorkflowNodeData {
   useConversationHistory?: boolean
   maxHistoryTurns?: number
   appendAssistantReply?: boolean
+  /** MM-2: 多模态输入 - 开启时从 ctx.input/lastOutput 获取图片，以 image_url 注入 LLM（图文混合） */
+  attachImages?: boolean
+  /** attachImages 的图片字段名（默认从 input.files/documentAttachments 自动取） */
+  imageField?: string
   /** agent */
   agentType?: 'auto' | 'editor' | 'flow' | 'page' | 'general'
   /** expert — 插件中心专家 id */
@@ -245,7 +249,7 @@ export interface AgentWorkflowNodeData {
     tools?: string[]
   }>
   /** agent-team：协作模式 */
-  agentTeamMode?: 'sequential' | 'discussion' | 'parallel'
+  agentTeamMode?: 'sequential' | 'discussion' | 'parallel' | 'vote'
   /** agent-team：最大 supervisor 轮次 */
   agentTeamMaxRounds?: number
   /** agent-team：supervisor 模型 */

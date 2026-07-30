@@ -44,6 +44,14 @@ import { createGovernmentPetitionClassifyWorkflowGraph } from './templateFactori
 import { createRetailInventoryForecastWorkflowGraph } from './templateFactories/retailInventoryForecast.js'
 import { createFinanceLoanReviewWorkflowGraph } from './templateFactories/financeLoanReview.js'
 import { createEnergyConsumptionReportWorkflowGraph } from './templateFactories/energyConsumptionReport.js'
+import { createVoteDecisionWorkflowGraph } from './templateFactories/voteDecision.js'
+import { createMultimodalLlmAnalyzeWorkflowGraph } from './templateFactories/multimodalLlmAnalyze.js'
+import { createSmartFormSearchWorkflowGraph } from './templateFactories/smartFormSearch.js'
+import { createScheduledReportWorkflowGraph } from './templateFactories/scheduledReport.js'
+import { createCodeExecuteDemoWorkflowGraph } from './templateFactories/codeExecuteDemo.js'
+import { createSwitchDemoWorkflowGraph } from './templateFactories/switchDemo.js'
+import { createParallelTeamDemoWorkflowGraph } from './templateFactories/parallelTeamDemo.js'
+import { createDashboardAssistWorkflowGraph } from './templateFactories/dashboardAssist.js'
 
 export function createAgentWorkflowGraphByTemplate(
   templateId: AgentWorkflowTemplateId,
@@ -127,6 +135,22 @@ export function createAgentWorkflowGraphByTemplate(
       return createFinanceLoanReviewWorkflowGraph()
     case 'energy-consumption-report':
       return createEnergyConsumptionReportWorkflowGraph()
+    case 'vote-decision':
+      return createVoteDecisionWorkflowGraph()
+    case 'multimodal-llm-analyze':
+      return createMultimodalLlmAnalyzeWorkflowGraph()
+    case 'smart-form-search':
+      return createSmartFormSearchWorkflowGraph()
+    case 'scheduled-report':
+      return createScheduledReportWorkflowGraph()
+    case 'code-execute-demo':
+      return createCodeExecuteDemoWorkflowGraph()
+    case 'switch-demo':
+      return createSwitchDemoWorkflowGraph()
+    case 'parallel-team-demo':
+      return createParallelTeamDemoWorkflowGraph()
+    case 'dashboard-assist':
+      return createDashboardAssistWorkflowGraph()
     case 'blank':
     default:
       return createDefaultAgentWorkflowGraph()
