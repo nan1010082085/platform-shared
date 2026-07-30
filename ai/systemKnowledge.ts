@@ -118,3 +118,34 @@ export const OUTPUT_TAGS = {
   tip: '使用建议或优化提示（可选，1-2 条）',
   schema: '生成的 JSON 数据（必填，editor 用 schema_update，flow 用 flow_update）',
 } as const
+
+// ────────────────────────────────────────────
+// 垂直行业表单规范（行业关键字段，供 AI 生成行业表单参考）
+// ────────────────────────────────────────────
+
+export const INDUSTRY_FORM_STANDARDS: Record<string, { fields: string[]; rules: string[] }> = {
+  medical: {
+    fields: ['patientName', 'gender', 'age', 'chiefComplaint', 'diagnosis', 'medications', 'allergies'],
+    rules: ['病历表单必含主诉与诊断', '过敏史字段必填', '用药字段含用法用量'],
+  },
+  finance: {
+    fields: ['applicantName', 'idNumber', 'loanAmount', 'loanTerm', 'income', 'creditScore', 'collateral'],
+    rules: ['贷款申请必含金额/期限/收入', '身份证号字段加格式校验', '金额字段为 number'],
+  },
+  education: {
+    fields: ['studentName', 'studentId', 'grade', 'subject', 'score', 'teacherComment'],
+    rules: ['报名表单含年级/班级', '成绩字段为 number', '评语为 textarea'],
+  },
+  government: {
+    fields: ['petitionerName', 'contact', 'category', 'urgency', 'content', 'department'],
+    rules: ['诉求表单含类别/紧急度', '联系方式必填', '诉求内容为 textarea'],
+  },
+  retail: {
+    fields: ['productName', 'sku', 'price', 'stock', 'category', 'supplier'],
+    rules: ['商品表单含 SKU/价格/库存', '价格与库存为 number'],
+  },
+  hr: {
+    fields: ['employeeName', 'employeeId', 'department', 'position', 'leaveType', 'startDate', 'endDate', 'reason'],
+    rules: ['请假表单含起止日期与类型', '日期用 date', '事由为 textarea'],
+  },
+}

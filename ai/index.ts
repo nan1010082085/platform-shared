@@ -86,6 +86,7 @@ export {
   VARIABLE_SCOPE_DESCRIPTIONS,
   API_CONFIG_FIELDS,
   OUTPUT_TAGS,
+  INDUSTRY_FORM_STANDARDS,
 } from './systemKnowledge.js'
 
 export type {
