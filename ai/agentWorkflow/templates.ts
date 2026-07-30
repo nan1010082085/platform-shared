@@ -37,12 +37,14 @@ export type AgentWorkflowTemplateId =
   | 'medical-record-extract'
   | 'education-homework-grading'
   | 'manufacturing-quality-report'
+  | 'legal-case-summary'
+  | 'government-petition-classify'
 
 export interface AgentWorkflowTemplateMeta {
   id: AgentWorkflowTemplateId
   name: string
   description: string
-  category: 'general' | 'document' | 'assistant' | 'integration' | 'batch' | 'customer-service' | 'audit' | 'hr' | 'finance' | 'operations' | 'medical' | 'education' | 'manufacturing'
+  category: 'general' | 'document' | 'assistant' | 'integration' | 'batch' | 'customer-service' | 'audit' | 'hr' | 'finance' | 'operations' | 'medical' | 'education' | 'manufacturing' | 'legal' | 'government'
   icon?: string
   tags?: string[]
 }
@@ -327,5 +329,21 @@ export const AGENT_WORKFLOW_TEMPLATES: AgentWorkflowTemplateMeta[] = [
     category: 'manufacturing',
     icon: 'data-analysis',
     tags: ['manufacturing', 'quality', 'report', 'audit'],
+  },
+  {
+    id: 'legal-case-summary',
+    name: '案件摘要提取',
+    description: '解析案件文档，提取当事人/诉求/事实/法律点，生成结构化案件摘要',
+    category: 'legal',
+    icon: 'document',
+    tags: ['legal', 'case', 'summary', 'extract'],
+  },
+  {
+    id: 'government-petition-classify',
+    name: '政务诉求分类',
+    description: '对群众诉求文本分类、判定紧急度，给出派发部门与处理建议',
+    category: 'government',
+    icon: 'chat-dot-round',
+    tags: ['government', 'petition', 'classify', 'dispatch'],
   },
 ]

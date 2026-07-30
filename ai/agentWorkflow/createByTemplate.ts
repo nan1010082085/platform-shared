@@ -39,6 +39,8 @@ import { createMemoryAssistantWorkflowGraph } from './templateFactories/memoryAs
 import { createMedicalRecordExtractWorkflowGraph } from './templateFactories/medicalRecordExtract.js'
 import { createEducationHomeworkGradingWorkflowGraph } from './templateFactories/educationHomeworkGrading.js'
 import { createManufacturingQualityReportWorkflowGraph } from './templateFactories/manufacturingQualityReport.js'
+import { createLegalCaseSummaryWorkflowGraph } from './templateFactories/legalCaseSummary.js'
+import { createGovernmentPetitionClassifyWorkflowGraph } from './templateFactories/governmentPetitionClassify.js'
 
 export function createAgentWorkflowGraphByTemplate(
   templateId: AgentWorkflowTemplateId,
@@ -112,6 +114,10 @@ export function createAgentWorkflowGraphByTemplate(
       return createEducationHomeworkGradingWorkflowGraph()
     case 'manufacturing-quality-report':
       return createManufacturingQualityReportWorkflowGraph()
+    case 'legal-case-summary':
+      return createLegalCaseSummaryWorkflowGraph()
+    case 'government-petition-classify':
+      return createGovernmentPetitionClassifyWorkflowGraph()
     case 'blank':
     default:
       return createDefaultAgentWorkflowGraph()

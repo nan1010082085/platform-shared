@@ -39,7 +39,7 @@ export function createMemoryAssistantWorkflowGraph(): AgentWorkflowGraph {
           model: 'default',
           temperature: 0.3,
           systemPrompt:
-            '你是用户的个性化助手。结合召回的用户长程记忆（偏好/事实/事件）给出贴合用户的回答。若无相关记忆，正常回答并保持一致风格。',
+            '你是用户的个性化助手。结合召回的用户长程记忆（偏好/事实/事件）给出贴合用户的回答。\n\n## 输出格式\n\n直接输出中文回答文本，不要输出 JSON。\n\n## 规则\n- 优先利用记忆中的偏好/事实/事件给出个性化回答\n- 若无相关记忆，正常回答并保持一致风格\n- 不要编造记忆中不存在的事实\n- 记忆为空时直接回答当前问题',
           prompt:
             '用户长程记忆：\n{{$node.recall-1}}\n\n当前问题：{{$input.message}}\n\n请结合记忆回答：',
         },
