@@ -41,6 +41,9 @@ import { createEducationHomeworkGradingWorkflowGraph } from './templateFactories
 import { createManufacturingQualityReportWorkflowGraph } from './templateFactories/manufacturingQualityReport.js'
 import { createLegalCaseSummaryWorkflowGraph } from './templateFactories/legalCaseSummary.js'
 import { createGovernmentPetitionClassifyWorkflowGraph } from './templateFactories/governmentPetitionClassify.js'
+import { createRetailInventoryForecastWorkflowGraph } from './templateFactories/retailInventoryForecast.js'
+import { createFinanceLoanReviewWorkflowGraph } from './templateFactories/financeLoanReview.js'
+import { createEnergyConsumptionReportWorkflowGraph } from './templateFactories/energyConsumptionReport.js'
 
 export function createAgentWorkflowGraphByTemplate(
   templateId: AgentWorkflowTemplateId,
@@ -118,6 +121,12 @@ export function createAgentWorkflowGraphByTemplate(
       return createLegalCaseSummaryWorkflowGraph()
     case 'government-petition-classify':
       return createGovernmentPetitionClassifyWorkflowGraph()
+    case 'retail-inventory-forecast':
+      return createRetailInventoryForecastWorkflowGraph()
+    case 'finance-loan-review':
+      return createFinanceLoanReviewWorkflowGraph()
+    case 'energy-consumption-report':
+      return createEnergyConsumptionReportWorkflowGraph()
     case 'blank':
     default:
       return createDefaultAgentWorkflowGraph()

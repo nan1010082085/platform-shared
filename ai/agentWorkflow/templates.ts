@@ -39,12 +39,15 @@ export type AgentWorkflowTemplateId =
   | 'manufacturing-quality-report'
   | 'legal-case-summary'
   | 'government-petition-classify'
+  | 'retail-inventory-forecast'
+  | 'finance-loan-review'
+  | 'energy-consumption-report'
 
 export interface AgentWorkflowTemplateMeta {
   id: AgentWorkflowTemplateId
   name: string
   description: string
-  category: 'general' | 'document' | 'assistant' | 'integration' | 'batch' | 'customer-service' | 'audit' | 'hr' | 'finance' | 'operations' | 'medical' | 'education' | 'manufacturing' | 'legal' | 'government'
+  category: 'general' | 'document' | 'assistant' | 'integration' | 'batch' | 'customer-service' | 'audit' | 'hr' | 'finance' | 'operations' | 'medical' | 'education' | 'manufacturing' | 'legal' | 'government' | 'retail' | 'energy'
   icon?: string
   tags?: string[]
 }
@@ -345,5 +348,29 @@ export const AGENT_WORKFLOW_TEMPLATES: AgentWorkflowTemplateMeta[] = [
     category: 'government',
     icon: 'chat-dot-round',
     tags: ['government', 'petition', 'classify', 'dispatch'],
+  },
+  {
+    id: 'retail-inventory-forecast',
+    name: '库存补货预测',
+    description: '分析库存数据，预测缺货风险，输出补货清单与采购建议',
+    category: 'retail',
+    icon: 'goods',
+    tags: ['retail', 'inventory', 'forecast', 'restock'],
+  },
+  {
+    id: 'finance-loan-review',
+    name: '贷款风险评估',
+    description: '解析贷款申请，评估信用与还款能力，输出风险评分与审批建议',
+    category: 'finance',
+    icon: 'coin',
+    tags: ['finance', 'loan', 'risk', 'audit'],
+  },
+  {
+    id: 'energy-consumption-report',
+    name: '能耗分析报告',
+    description: '解析能耗数据，识别异常用电与节能空间，生成节能建议报告',
+    category: 'energy',
+    icon: 'data-analysis',
+    tags: ['energy', 'consumption', 'analysis', 'report'],
   },
 ]

@@ -111,6 +111,7 @@ import Money from '@iconify-icons/ep/money'
 import ShoppingCart from '@iconify-icons/ep/shopping-cart'
 import CreditCard from '@iconify-icons/ep/credit-card'
 import Coin from '@iconify-icons/ep/coin'
+import Goods from '@iconify-icons/ep/goods'
 import Collection from '@iconify-icons/ep/collection'
 import Tools from '@iconify-icons/ep/tools'
 import DocumentChecked from '@iconify-icons/ep/document-checked'
@@ -231,6 +232,7 @@ export const ICON_MAP: Record<string, IconifyIcon> = {
   'shopping-cart': ShoppingCart,
   'credit-card': CreditCard,
   coin: Coin,
+  goods: Goods,
   collection: Collection,
   tools: Tools,
   'document-checked': DocumentChecked,
