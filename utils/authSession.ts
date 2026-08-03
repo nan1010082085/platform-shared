@@ -175,7 +175,7 @@ export function initCapabilityPlatformAuth(options: CapabilityAuthOptions = {}):
     setUnauthorizedHandler(options.onUnauthorized)
   }
   if (options.bootstrap !== false) {
-    void bootstrapAuthSession()
+    void bootstrapAuthSession().then(() => connectSocket())
   }
 }
 
