@@ -36,6 +36,12 @@
     }
   }
 
+  &__body {
+    max-height: calc(100vh - 220px);
+    overflow-y: auto;
+    overflow-x: hidden;
+  }
+
   &__footer {
     display: flex;
     justify-content: flex-end;

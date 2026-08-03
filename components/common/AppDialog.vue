@@ -32,7 +32,9 @@
         </div>
       </div>
     </template>
-    <slot />
+    <div :class="styles['app-dialog__body']">
+      <slot />
+    </div>
     <template #footer>
       <div :class="styles['app-dialog__footer']">
         <slot name="footer">
