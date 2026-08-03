@@ -246,23 +246,23 @@ export interface ChatEvent {
 
 /** 发送聊天消息（启动流式响应） */
 export function emitChatSend(data: ChatSendPayload): void {
-  if (socket && connected) {
-    socket.emit('chat:send', data)
+  if (!socket) {
+    console.error('[socket] emitChatSend: socket not initialized')
+    return
   }
+  socket.emit('chat:send', data)
 }
 
 /** 取消当前聊天流 */
 export function emitChatCancel(): void {
-  if (socket && connected) {
-    socket.emit('chat:cancel')
-  }
+  if (!socket) return
+  socket.emit('chat:cancel')
 }
 
 /** 恢复 HITL 中断的对话 */
 export function emitChatResume(threadId: string, resumeValue: boolean | Record<string, unknown>): void {
-  if (socket && connected) {
-    socket.emit('chat:resume', { threadId, resumeValue })
-  }
+  if (!socket) return
+  socket.emit('chat:resume', { threadId, resumeValue })
 }
 
 /** 监听聊天流事件 */
