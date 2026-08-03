@@ -15,7 +15,7 @@ import {
 import { isShellEmbedded, redirectToLogin } from './authPaths.js'
 import { useAuthStore } from './stores/authStore.js'
 import type { AuthUser } from './authTypes.js'
-import { setSocketTokenProvider } from '../socket/index.js'
+import { setSocketTokenProvider, connect as connectSocket } from '../socket/index.js'
 
 export const ACCESS_TOKEN_KEY = 'sfp_access_token'
 export const REFRESH_TOKEN_KEY = 'sfp_refresh_token'
@@ -74,6 +74,9 @@ function syncTokensToStore(access: string, refresh?: string | null): void {
   if (pinia) {
     useAuthStore(pinia).setTokens(access, refresh ?? undefined)
   }
+  // token 更新后重连 socket，确保 ws 用最新 token
+  // 覆盖 login / refresh / bootstrap 恢复场景；connect 内部已连则跳过
+  connectSocket()
 }
 
 /** 使用 refresh token 换取新 access token */
