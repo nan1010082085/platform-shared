@@ -122,6 +122,7 @@ import Coordinate from '@iconify-icons/ep/coordinate'
 import Postcard from '@iconify-icons/ep/postcard'
 import DataAnalysis from '@iconify-icons/ep/data-analysis'
 import Reading from '@iconify-icons/ep/reading'
+import Flag from '@iconify-icons/ep/flag'
 
 /** 图标名称 → Iconify 图标对象映射（AppIcon 唯一合法来源） */
 export const ICON_MAP: Record<string, IconifyIcon> = {
@@ -243,6 +244,7 @@ export const ICON_MAP: Record<string, IconifyIcon> = {
   postcard: Postcard,
   'data-analysis': DataAnalysis,
   reading: Reading,
+  flag: Flag,
 }
 
 /** 已注册图标名称列表（kebab-case） */
