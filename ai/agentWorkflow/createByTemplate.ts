@@ -52,6 +52,8 @@ import { createCodeExecuteDemoWorkflowGraph } from './templateFactories/codeExec
 import { createSwitchDemoWorkflowGraph } from './templateFactories/switchDemo.js'
 import { createParallelTeamDemoWorkflowGraph } from './templateFactories/parallelTeamDemo.js'
 import { createDashboardAssistWorkflowGraph } from './templateFactories/dashboardAssist.js'
+import { createHandoffDemoWorkflowGraph } from './templateFactories/handoffDemo.js'
+import { createFormQueryDemoWorkflowGraph } from './templateFactories/formQueryDemo.js'
 
 export function createAgentWorkflowGraphByTemplate(
   templateId: AgentWorkflowTemplateId,
@@ -151,6 +153,10 @@ export function createAgentWorkflowGraphByTemplate(
       return createParallelTeamDemoWorkflowGraph()
     case 'dashboard-assist':
       return createDashboardAssistWorkflowGraph()
+    case 'handoff-demo':
+      return createHandoffDemoWorkflowGraph()
+    case 'form-query-demo':
+      return createFormQueryDemoWorkflowGraph()
     case 'blank':
     default:
       return createDefaultAgentWorkflowGraph()

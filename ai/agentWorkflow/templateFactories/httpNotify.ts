@@ -39,7 +39,7 @@ export function createHttpNotifyWorkflowGraph(): AgentWorkflowGraph {
         data: {
           label: 'HTTP 回调通知',
           toolCategory: 'workflow',
-          toolName: 'http__request',
+          toolName: 'http_request',
           toolArgs: {
             url: '{{$input.callbackUrl}}',
             method: 'POST',

@@ -4,15 +4,13 @@
 
 import type { AgentWorkflowGraph } from '../types.js'
 import { layoutAgentWorkflowGraph } from '../defaults.js'
+
 /**
  * 智能助手 v2 — chat-parity-assistant
  *
  * 图：manual-trigger → intent-router
  *   →|needsAnalysis| requirement-analyzer → hitl → task-planner → task-chain → expert → collaboration-router
- *     →|continue| expert  (协作循环)
- *     →|nextStep| task-chain  (下一任务)
- *     →|summarize| summarizer → end
- *   →|matched| expert  (快捷路径)
+ *   →|matched| expert
  */
 export function createChatParityAssistantWorkflowGraph(): AgentWorkflowGraph {
   return layoutAgentWorkflowGraph({
@@ -32,7 +30,7 @@ export function createChatParityAssistantWorkflowGraph(): AgentWorkflowGraph {
           label: '意图路由',
           routingMode: 'auto',
           enableMultiIntentChain: false,
-          fallbackExpertId: '',
+          fallbackExpertId: 'platform.general',
         },
       },
       {
@@ -89,6 +87,7 @@ export function createChatParityAssistantWorkflowGraph(): AgentWorkflowGraph {
         data: {
           label: '专家执行',
           agentType: 'auto',
+          expertId: 'platform.general',
         },
       },
       {
@@ -122,21 +121,16 @@ export function createChatParityAssistantWorkflowGraph(): AgentWorkflowGraph {
     ],
     edges: [
       { id: 'e1', source: 'trigger-1', target: 'intent-router-1' },
-      // needsAnalysis 分支
       { id: 'e2', source: 'intent-router-1', target: 'req-analyzer-1', sourceHandle: 'needsAnalysis' },
       { id: 'e3', source: 'req-analyzer-1', target: 'hitl-1' },
       { id: 'e4', source: 'hitl-1', target: 'task-planner-1' },
       { id: 'e5', source: 'task-planner-1', target: 'task-chain-1' },
       { id: 'e6', source: 'task-chain-1', target: 'expert-1' },
-      // matched 快捷路径
       { id: 'e7', source: 'intent-router-1', target: 'expert-1', sourceHandle: 'matched' },
-      // expert → collaboration-router
       { id: 'e8', source: 'expert-1', target: 'collab-router-1' },
-      // 协作路由三路分支
       { id: 'e9', source: 'collab-router-1', target: 'expert-1', sourceHandle: 'continue', data: { label: '继续协作' } },
       { id: 'e10', source: 'collab-router-1', target: 'task-chain-1', sourceHandle: 'nextStep', data: { label: '下一任务' } },
       { id: 'e11', source: 'collab-router-1', target: 'summarizer-1', sourceHandle: 'summarize', data: { label: '生成摘要' } },
-      // 摘要 → 结束
       { id: 'e12', source: 'summarizer-1', target: 'end-1' },
     ],
   })

@@ -4,7 +4,13 @@
 
 import type { AgentWorkflowGraph } from '../types.js'
 import { layoutAgentWorkflowGraph } from '../defaults.js'
-/** 视频营销生成：手动触发 -> LLM 生成视频脚本 -> 视频生成 -> 结束 */
+
+/**
+ * 视频营销脚本：手动触发 → LLM 脚本 → 结束
+ *
+ * 说明：完整链路本可接 video-generate；线上未配置视频生成模型/密钥时该节点会失败。
+ * 模板先交付可试跑的脚本与 videoPrompt；模型中心就绪后可在图末追加 video-generate。
+ */
 export function createMultimodalVideoPromoWorkflowGraph(): AgentWorkflowGraph {
   return layoutAgentWorkflowGraph({
     entryNodeId: 'trigger-1',
@@ -29,17 +35,16 @@ export function createMultimodalVideoPromoWorkflowGraph(): AgentWorkflowGraph {
         },
       },
       {
-        id: 'video-1',
-        type: 'video-generate',
+        id: 'llm-pack',
+        type: 'llm',
         position: { x: 560, y: 200 },
         data: {
-          label: '视频生成',
-          videoPrompt: '{{$node.llm-1.videoPrompt}}',
-          videoModel: '',
-          duration: 8,
-          resolution: '720p',
-          pollIntervalMs: 5000,
-          pollTimeoutMs: 300000,
+          label: '整理分镜脚本',
+          model: 'default',
+          temperature: 0.2,
+          systemPrompt:
+            '你把上游 JSON 整理为可读的分镜 Markdown（标题、时长、画面描述、旁白建议）。不要输出 JSON。',
+          prompt: '上游输出：\n{{$node.llm-1.text}}\n\n请整理为分镜脚本。',
         },
       },
       {
@@ -51,8 +56,8 @@ export function createMultimodalVideoPromoWorkflowGraph(): AgentWorkflowGraph {
     ],
     edges: [
       { id: 'e1', source: 'trigger-1', target: 'llm-1' },
-      { id: 'e2', source: 'llm-1', target: 'video-1' },
-      { id: 'e3', source: 'video-1', target: 'end-1' },
+      { id: 'e2', source: 'llm-1', target: 'llm-pack' },
+      { id: 'e3', source: 'llm-pack', target: 'end-1' },
     ],
   })
 }

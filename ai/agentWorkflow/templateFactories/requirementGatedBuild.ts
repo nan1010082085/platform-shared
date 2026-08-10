@@ -4,6 +4,7 @@
 
 import type { AgentWorkflowGraph } from '../types.js'
 import { layoutAgentWorkflowGraph } from '../defaults.js'
+
 /**
  * 需求门控构建 — requirement-gated-build
  *
@@ -74,7 +75,7 @@ export function createRequirementGatedBuildWorkflowGraph(): AgentWorkflowGraph {
         data: {
           label: '编辑器专家',
           agentType: 'editor',
-          expertId: '',
+          expertId: 'platform.editor',
         },
       },
       {
@@ -83,9 +84,31 @@ export function createRequirementGatedBuildWorkflowGraph(): AgentWorkflowGraph {
         position: { x: 1760, y: 200 },
         data: {
           label: '流程任务链',
-          chainSource: 'upstream',
-          staticChain: [],
+          chainSource: 'static',
+          staticChain: [
+            {
+              id: 'flow-step-1',
+              agent: 'flow',
+              description: '按需求完成流程侧构建',
+              inputs: {},
+              outputs: {},
+              dependencies: [],
+              priority: 1,
+              status: 'pending',
+            },
+          ],
           onStepOutput: '',
+          taskChain: {
+            currentStepIndex: 0,
+            steps: [
+              {
+                id: 'flow-step-1',
+                description: '按需求完成流程侧构建',
+                legacyAgentKey: 'flow',
+                status: 'pending',
+              },
+            ],
+          },
         },
       },
       {
@@ -95,7 +118,7 @@ export function createRequirementGatedBuildWorkflowGraph(): AgentWorkflowGraph {
         data: {
           label: '流程专家',
           agentType: 'flow',
-          expertId: '',
+          expertId: 'platform.flow',
         },
       },
       {

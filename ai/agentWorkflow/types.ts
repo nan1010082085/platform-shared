@@ -225,6 +225,20 @@ export interface AgentWorkflowNodeData {
   chainSource?: 'upstream' | 'static'
   staticChain?: TaskPlanStep[]
   onStepOutput?: string
+  /**
+   * 运行时任务链（executor 读取 `data.taskChain`）。
+   * 当前服务端尚未把 `chainSource=upstream` 接到 planner 输出，模板需提供静态 steps 兜底。
+   */
+  taskChain?: {
+    steps: Array<{
+      id: string
+      description: string
+      expertId?: string
+      legacyAgentKey?: string
+      status?: 'pending' | 'running' | 'done' | 'failed'
+    }>
+    currentStepIndex?: number
+  }
   /** collaboration-router */
   detectCollaborationTool?: boolean
   maxCollaborationRounds?: number

@@ -54,16 +54,15 @@ export function createRagIngestQaWorkflowGraph(): AgentWorkflowGraph {
       },
       {
         id: 'rag-ingest',
-        type: 'tool',
+        type: 'memory-write',
         position: { x: 1040, y: 100 },
         data: {
-          label: '写入知识库',
-          toolCategory: 'mcp-rag',
-          toolName: 'rag__ingest',
-          toolArgs: {
-            content: '{{$node.parse-1.text}}',
-            metadata: { source: 'qa-passed', filename: '{{$node.parse-1.filename}}' },
-          },
+          label: '写入知识库记忆',
+          memoryWriteContent:
+            '质检通过入库：{{$node.parse-1.filename}}\n\n{{$node.parse-1.text}}',
+          memoryWriteNamespace: 'fact',
+          memoryWriteImportance: 0.6,
+          memoryWriteUserIdSource: 'auto',
         },
       },
       {
@@ -90,16 +89,15 @@ export function createRagIngestQaWorkflowGraph(): AgentWorkflowGraph {
       },
       {
         id: 'rag-ingest-force',
-        type: 'tool',
+        type: 'memory-write',
         position: { x: 1520, y: 250 },
         data: {
-          label: '强制入库',
-          toolCategory: 'mcp-rag',
-          toolName: 'rag__ingest',
-          toolArgs: {
-            content: '{{$node.parse-1.text}}',
-            metadata: { source: 'qa-manual-override', filename: '{{$node.parse-1.filename}}' },
-          },
+          label: '强制入库记忆',
+          memoryWriteContent:
+            '人工强制入库：{{$node.parse-1.filename}}\n备注：{{$input.answers.q2}}\n\n{{$node.parse-1.text}}',
+          memoryWriteNamespace: 'fact',
+          memoryWriteImportance: 0.5,
+          memoryWriteUserIdSource: 'auto',
         },
       },
       {

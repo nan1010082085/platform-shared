@@ -50,6 +50,8 @@ export type AgentWorkflowTemplateId =
   | 'switch-demo'
   | 'parallel-team-demo'
   | 'dashboard-assist'
+  | 'handoff-demo'
+  | 'form-query-demo'
 
 export interface AgentWorkflowTemplateMeta {
   id: AgentWorkflowTemplateId
@@ -104,10 +106,10 @@ export const AGENT_WORKFLOW_TEMPLATES: AgentWorkflowTemplateMeta[] = [
   {
     id: 'kb-faq',
     name: '知识库 FAQ 生成',
-    description: 'Webhook 接收文档，由 LLM 自动生成问答对并写入知识库',
+    description: 'Webhook 接收文档，由 LLM 生成问答对并写入长程记忆（memory-write；待服务端提供入库工具后可切回 RAG）',
     category: 'assistant',
     icon: 'notebook',
-    tags: ['assistant', 'rag', 'faq'],
+    tags: ['assistant', 'memory', 'faq'],
   },
   {
     id: 'http-notify',
@@ -120,10 +122,10 @@ export const AGENT_WORKFLOW_TEMPLATES: AgentWorkflowTemplateMeta[] = [
   {
     id: 'rag-ingest-qa',
     name: 'RAG 入库质检',
-    description: '文档解析后经 LLM 质检，合格文档自动入库，不合格触发人工审核',
+    description: '文档解析后经 LLM 质检；合格/人工确认后写入长程记忆（待服务端提供 RAG 入库工具后可切换）',
     category: 'assistant',
     icon: 'filter',
-    tags: ['assistant', 'rag', 'quality'],
+    tags: ['assistant', 'memory', 'quality'],
   },
   {
     id: 'multi-doc-batch',
@@ -168,26 +170,26 @@ export const AGENT_WORKFLOW_TEMPLATES: AgentWorkflowTemplateMeta[] = [
   {
     id: 'image-analysis',
     name: '图片智能分析',
-    description: '图片分析 → 结构化提取（日期/分类/地点）→ 根据类型生成情感/事件/信息微叙事',
+    description: '依赖 vision 多模态模型；当前环境若拒收 image_url 会失败，需在模型中心配置支持视觉的对话模型',
     category: 'document',
     icon: 'picture',
-    tags: ['document', 'image', 'analysis'],
+    tags: ['document', 'image', 'analysis', 'needs-vision'],
   },
   {
     id: 'chat-parity-assistant',
     name: '智能助手 v2',
-    description: '意图路由 → 需求分析 → 人工确认 → 任务规划 → 多专家协作 → 摘要输出，支持快捷匹配与协作循环',
+    description: '意图路由 → 需求分析 → HITL → 任务规划 → task-chain → 专家协作 → 摘要',
     category: 'assistant',
     icon: 'chat-dot-round',
-    tags: ['assistant', 'multi-agent'],
+    tags: ['assistant', 'multi-agent', 'hitl'],
   },
   {
     id: 'requirement-gated-build',
     name: '需求门控构建',
-    description: '需求分析 → 人工确认 → 任务规划 → 编辑器专家 → 流程专家 → 摘要输出，按需求门控逐步构建',
+    description: '需求分析 → HITL → 任务规划 → task-chain + 编辑器/流程专家 → 摘要',
     category: 'assistant',
     icon: 'circle-check',
-    tags: ['requirement', 'gated', 'multi-step'],
+    tags: ['requirement', 'gated', 'multi-agent'],
   },
   {
     id: 'cs-ticket-triage',
@@ -272,18 +274,18 @@ export const AGENT_WORKFLOW_TEMPLATES: AgentWorkflowTemplateMeta[] = [
   {
     id: 'multimodal-image-text',
     name: '图文批量生成',
-    description: 'LLM 生成文案与配图 prompt -> 图片生成节点产出多张配图，组合为图文素材',
+    description: 'LLM 生成文案与配图 prompt 并整理交付稿；模型中心配置图像生成后可再接 image-generate',
     category: 'general',
     icon: 'picture',
-    tags: ['multimodal', 'image', 'batch'],
+    tags: ['multimodal', 'image', 'copy'],
   },
   {
     id: 'multimodal-video-promo',
     name: '视频营销生成',
-    description: 'LLM 生成视频脚本 -> 视频生成节点产出短视频，适合营销/宣传素材快速生产',
+    description: 'LLM 生成视频脚本并整理分镜稿；模型中心配置视频生成后可再接 video-generate',
     category: 'general',
     icon: 'video-play',
-    tags: ['multimodal', 'video', 'marketing'],
+    tags: ['multimodal', 'video', 'script'],
   },
   {
     id: 'resume-screening',
@@ -444,5 +446,21 @@ export const AGENT_WORKFLOW_TEMPLATES: AgentWorkflowTemplateMeta[] = [
     category: 'general',
     icon: 'data-analysis',
     tags: ['dashboard', 'ai', 'layout', 'chart'],
+  },
+  {
+    id: 'handoff-demo',
+    name: '会话交接演示',
+    description: 'LLM 前言后 handoff 到 $input.targetWorkflowId 指定的已发布工作流',
+    category: 'assistant',
+    icon: 'connection',
+    tags: ['handoff', 'demo', 'multi-agent'],
+  },
+  {
+    id: 'form-query-demo',
+    name: '表单查询演示',
+    description: '按 $input.schemaId 查询表单提交并由 LLM 解读（可选 filter）',
+    category: 'operations',
+    icon: 'search',
+    tags: ['form-query', 'demo', 'operations'],
   },
 ]

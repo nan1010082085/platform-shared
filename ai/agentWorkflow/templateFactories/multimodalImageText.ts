@@ -5,7 +5,12 @@
 import type { AgentWorkflowGraph } from '../types.js'
 import { layoutAgentWorkflowGraph } from '../defaults.js'
 
-/** 图文批量生成：手动触发 -> LLM 生成文案+图片 prompt -> 图片生成(多张) -> 结束 */
+/**
+ * 图文素材生成：手动触发 → LLM 文案+配图 prompt → 结束
+ *
+ * 说明：完整链路本可接 image-generate；线上未配置图像生成模型/密钥时该节点会失败。
+ * 模板先交付可试跑的文案与配图 prompt；模型中心就绪后可在图末追加 image-generate。
+ */
 export function createMultimodalImageTextWorkflowGraph(): AgentWorkflowGraph {
   return layoutAgentWorkflowGraph({
     entryNodeId: 'trigger-1',
@@ -30,17 +35,16 @@ export function createMultimodalImageTextWorkflowGraph(): AgentWorkflowGraph {
         },
       },
       {
-        id: 'image-1',
-        type: 'image-generate',
+        id: 'llm-pack',
+        type: 'llm',
         position: { x: 560, y: 200 },
         data: {
-          label: '批量配图生成',
-          imagePrompt: '{{$node.llm-1.imagePrompts}}',
-          imageModel: '',
-          imageSize: '1024x1024',
-          imageStyle: 'vivid',
-          imageQuality: 'standard',
-          imageCount: 3,
+          label: '整理交付稿',
+          model: 'default',
+          temperature: 0.2,
+          systemPrompt:
+            '你把上游 JSON 整理为可读的 Markdown 交付稿，包含标题、正文、配图 Prompt 列表。不要输出 JSON。',
+          prompt: '上游输出：\n{{$node.llm-1.text}}\n\n请整理为交付稿。',
         },
       },
       {
@@ -52,8 +56,8 @@ export function createMultimodalImageTextWorkflowGraph(): AgentWorkflowGraph {
     ],
     edges: [
       { id: 'e1', source: 'trigger-1', target: 'llm-1' },
-      { id: 'e2', source: 'llm-1', target: 'image-1' },
-      { id: 'e3', source: 'image-1', target: 'end-1' },
+      { id: 'e2', source: 'llm-1', target: 'llm-pack' },
+      { id: 'e3', source: 'llm-pack', target: 'end-1' },
     ],
   })
 }

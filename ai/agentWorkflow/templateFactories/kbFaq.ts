@@ -4,7 +4,7 @@
 
 import type { AgentWorkflowGraph } from '../types.js'
 import { layoutAgentWorkflowGraph } from '../defaults.js'
-/** 知识库 FAQ 生成：手动触发 → 文档解析 → LLM 生成问答对 → RAG 写入 → 结束 */
+/** 知识库 FAQ 生成：手动触发 → 文档解析 → LLM 生成问答对 → 记忆写入 → 结束 */
 export function createKbFaqWorkflowGraph(): AgentWorkflowGraph {
   return layoutAgentWorkflowGraph({
     entryNodeId: 'webhook-1',
@@ -45,16 +45,15 @@ export function createKbFaqWorkflowGraph(): AgentWorkflowGraph {
       },
       {
         id: 'rag-write',
-        type: 'tool',
+        type: 'memory-write',
         position: { x: 800, y: 200 },
         data: {
-          label: '写入知识库',
-          toolCategory: 'mcp-rag',
-          toolName: 'rag__ingest',
-          toolArgs: {
-            content: '{{$node.llm-1}}',
-            metadata: { source: 'faq-generated', filename: '{{$node.parse-1.filename}}' },
-          },
+          label: '写入知识库记忆',
+          memoryWriteContent:
+            'FAQ 来源：{{$node.parse-1.filename}}\n\n{{$node.llm-1.text}}',
+          memoryWriteNamespace: 'fact',
+          memoryWriteImportance: 0.7,
+          memoryWriteUserIdSource: 'auto',
         },
       },
       {

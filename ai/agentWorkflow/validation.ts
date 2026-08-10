@@ -13,6 +13,13 @@ import type {
   TaskChainNodeData,
   CollaborationRouterNodeData,
 } from './types.js'
+import { TOOL_DISPLAY_LABELS } from '../toolNames.js'
+
+/** 历史错误工具名 → 建议替换（防模板再引入试跑已踩过的坑） */
+const KNOWN_BAD_TOOL_ALIASES: Record<string, string> = {
+  http__request: 'http_request',
+  rag__ingest: 'rag_index（仅 schema 索引）或改用 memory-write / 待服务端注册入库工具',
+}
 export function validateAgentWorkflowGraph(graph: AgentWorkflowGraph): AgentWorkflowValidationIssue[] {
   const issues: AgentWorkflowValidationIssue[] = []
   if (!graph.nodes.length) {
@@ -56,8 +63,23 @@ export function validateAgentWorkflowGraph(graph: AgentWorkflowGraph): AgentWork
     if (node.type === 'llm' && !node.data.prompt?.trim()) {
       issues.push({ level: 'warning', nodeId: node.id, message: 'LLM 节点未配置 Prompt' })
     }
-    if (node.type === 'tool' && !node.data.toolName?.trim()) {
-      issues.push({ level: 'warning', nodeId: node.id, message: '工具节点未选择具体工具' })
+    if (node.type === 'tool') {
+      const toolName = node.data.toolName?.trim() ?? ''
+      if (!toolName) {
+        issues.push({ level: 'warning', nodeId: node.id, message: '工具节点未选择具体工具' })
+      } else if (KNOWN_BAD_TOOL_ALIASES[toolName]) {
+        issues.push({
+          level: 'error',
+          nodeId: node.id,
+          message: `工具名「${toolName}」未注册，请改为 ${KNOWN_BAD_TOOL_ALIASES[toolName]}`,
+        })
+      } else if (!(toolName in TOOL_DISPLAY_LABELS)) {
+        issues.push({
+          level: 'warning',
+          nodeId: node.id,
+          message: `工具名「${toolName}」不在 platform-shared 已知清单，部署前请确认服务端已注册`,
+        })
+      }
     }
     if (node.type === 'expert' && !node.data.expertId?.trim()) {
       issues.push({ level: 'warning', nodeId: node.id, message: '专家节点未选择插件专家' })
@@ -144,7 +166,11 @@ export function validateAgentWorkflowGraph(graph: AgentWorkflowGraph): AgentWork
     if (node.type === 'handoff') {
       const d = node.data as AgentWorkflowNodeData
       if (!d.handoffTargetWorkflowId?.trim()) {
-        issues.push({ level: 'error', nodeId: node.id, message: '会话交接节点未选择目标 workflow' })
+        issues.push({
+          level: 'warning',
+          nodeId: node.id,
+          message: '会话交接未配置目标 workflow，运行时需提供 $input.targetWorkflowId',
+        })
       }
     }
     if (node.type === 'code-execute') {

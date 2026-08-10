@@ -81,6 +81,8 @@ export { createExcelReportWorkflowGraph } from './templateFactories/excelReport.
 export { createMultiDocCompareWorkflowGraph } from './templateFactories/multiDocCompare.js'
 export { createStructuredExtractWorkflowGraph } from './templateFactories/structuredExtract.js'
 export { createWebhookBatchDispatchWorkflowGraph } from './templateFactories/webhookBatchDispatch.js'
+export { createHandoffDemoWorkflowGraph } from './templateFactories/handoffDemo.js'
+export { createFormQueryDemoWorkflowGraph } from './templateFactories/formQueryDemo.js'
 export { createContentComplianceWorkflowGraph } from './templateFactories/contentCompliance.js'
 export { createContractRiskTagWorkflowGraph } from './templateFactories/contractRiskTag.js'
 export { createFaqQualityCheckWorkflowGraph } from './templateFactories/faqQualityCheck.js'

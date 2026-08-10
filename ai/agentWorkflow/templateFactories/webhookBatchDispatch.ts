@@ -4,7 +4,10 @@
 
 import type { AgentWorkflowGraph } from '../types.js'
 import { layoutAgentWorkflowGraph } from '../defaults.js'
-/** 批量任务分发：Webhook -> 任务规划 -> 任务链 -> 摘要汇总 -> 结束 */
+
+/**
+ * 批量任务分发：Webhook → 任务规划 → 任务链（upstream）→ 摘要 → 结束
+ */
 export function createWebhookBatchDispatchWorkflowGraph(): AgentWorkflowGraph {
   return layoutAgentWorkflowGraph({
     entryNodeId: 'webhook-1',

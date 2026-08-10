@@ -72,7 +72,7 @@ export function createSmartActionProposalsWorkflowGraph(): AgentWorkflowGraph {
         data: {
           label: '通知外部系统',
           toolCategory: 'workflow',
-          toolName: 'http__request',
+          toolName: 'http_request',
           toolArgs: {
             url: '{{$input.callbackUrl}}',
             method: 'POST',
