@@ -410,7 +410,11 @@ export interface AgentWorkflowEdge {
   targetHandle?: string
   data?: {
     label?: string
-    branch?: 'true' | 'false' | 'default'
+    /**
+     * 出边分支键：if 用 true/false；switch 用 case 标签；
+     * intent-router / collaboration-router 用 sourceHandle 同名（needsAnalysis / continue 等）。
+     */
+    branch?: string
   }
 }
 
