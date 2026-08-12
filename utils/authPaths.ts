@@ -40,7 +40,8 @@ export function resolveLoginUrl(redirect?: string): string {
     return `${origin}${SHELL_BASE}/ai/login?redirect=${encodeURIComponent(path)}`
   }
 
-  return `${origin}${SHELL_BASE}/login?redirect=${encodeURIComponent(path)}`
+  // 独立部署（非 Shell 嵌入）：使用当前 origin 的 /login
+  return `${origin}/login?redirect=${encodeURIComponent(path)}`
 }
 
 export function redirectToLogin(redirect?: string): void {

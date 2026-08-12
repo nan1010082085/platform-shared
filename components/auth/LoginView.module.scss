@@ -74,6 +74,18 @@
   gap: 16px;
 }
 
+.form-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.form-label {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text-color-primary);
+}
+
 .login-button {
   width: 100%;
   margin-top: 4px;

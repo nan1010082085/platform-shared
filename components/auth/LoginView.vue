@@ -195,64 +195,83 @@ function switchMode(newMode: ViewMode) {
       />
 
       <form :class="styles['login-form']" @submit.prevent="handleSubmit">
-        <el-input
-          v-if="mode !== 'changePassword'"
-          v-model="form.username"
-          name="username"
-          autocomplete="username"
-          placeholder="用户名"
-          size="large"
-        />
+        <div v-if="mode !== 'changePassword'" :class="styles['form-field']">
+          <label for="login-username" :class="styles['form-label']">用户名</label>
+          <el-input
+            id="login-username"
+            v-model="form.username"
+            name="username"
+            autocomplete="username"
+            placeholder="请输入用户名"
+            size="large"
+          />
+        </div>
 
-        <el-input
-          v-if="mode === 'register'"
-          v-model="form.nickname"
-          name="nickname"
-          autocomplete="nickname"
-          placeholder="昵称（选填）"
-          size="large"
-        />
+        <div v-if="mode === 'register'" :class="styles['form-field']">
+          <label for="login-nickname" :class="styles['form-label']">昵称（选填）</label>
+          <el-input
+            id="login-nickname"
+            v-model="form.nickname"
+            name="nickname"
+            autocomplete="nickname"
+            placeholder="请输入昵称"
+            size="large"
+          />
+        </div>
 
-        <el-input
-          v-if="mode === 'register'"
-          v-model="form.phone"
-          name="tel"
-          autocomplete="tel"
-          placeholder="手机号（选填）"
-          size="large"
-        />
+        <div v-if="mode === 'register'" :class="styles['form-field']">
+          <label for="login-phone" :class="styles['form-label']">手机号（选填）</label>
+          <el-input
+            id="login-phone"
+            v-model="form.phone"
+            name="tel"
+            autocomplete="tel"
+            placeholder="请输入手机号"
+            size="large"
+          />
+        </div>
 
-        <el-input
-          v-if="mode === 'changePassword'"
-          v-model="form.oldPassword"
-          name="current-password"
-          type="password"
-          show-password
-          autocomplete="current-password"
-          placeholder="当前密码"
-          size="large"
-        />
+        <div v-if="mode === 'changePassword'" :class="styles['form-field']">
+          <label for="login-old-password" :class="styles['form-label']">当前密码</label>
+          <el-input
+            id="login-old-password"
+            v-model="form.oldPassword"
+            name="current-password"
+            type="password"
+            show-password
+            autocomplete="current-password"
+            placeholder="请输入当前密码"
+            size="large"
+          />
+        </div>
 
-        <el-input
-          v-model="form.password"
-          name="password"
-          type="password"
-          show-password
-          :autocomplete="mode === 'changePassword' || mode === 'register' ? 'new-password' : 'current-password'"
-          :placeholder="mode === 'changePassword' ? '新密码' : '密码'"
-          size="large"
-        />
+        <div :class="styles['form-field']">
+          <label for="login-password" :class="styles['form-label']">{{ mode === 'changePassword' ? '新密码' : '密码' }}</label>
+          <el-input
+            id="login-password"
+            v-model="form.password"
+            name="password"
+            type="password"
+            show-password
+            :autocomplete="mode === 'changePassword' || mode === 'register' ? 'new-password' : 'current-password'"
+            :placeholder="mode === 'changePassword' ? '请输入新密码' : '请输入密码'"
+            size="large"
+          />
+        </div>
 
-        <el-input
-          v-if="mode !== 'login'"
-          v-model="form.confirmPassword"
-          name="confirm-password"
-          type="password"
-          show-password
-          autocomplete="new-password"
-          placeholder="确认密码"
-          size="large"
-        />
+        <div v-if="mode !== 'login'" :class="styles['form-field']">
+          <label for="login-confirm-password" :class="styles['form-label']">确认密码</label>
+          <el-input
+            id="login-confirm-password"
+            v-model="form.confirmPassword"
+            name="confirm-password"
+            type="password"
+            show-password
+            autocomplete="new-password"
+            placeholder="请再次输入密码"
+            size="large"
+          />
+        </div>
 
         <el-button
           type="primary"
