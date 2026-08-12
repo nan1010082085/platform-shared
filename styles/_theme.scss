@@ -70,8 +70,9 @@
   width: 100%;
 }
 
-// 日期选择器、选择器等默认高度 32px
-.el-input--small,
+// 单行控件默认高度 32px
+// EP textarea 根节点同时带 el-textarea + el-input--{size}，排除以免多行高度被压扁
+.el-input--small:not(.el-textarea),
 .el-select--small,
 .el-date-editor--small,
 .el-cascader--small {
@@ -87,6 +88,11 @@
     height: 32px;
     line-height: 32px;
   }
+}
+
+.el-textarea {
+  height: auto;
+  line-height: normal;
 }
 
 // 日期范围选择器默认高度 32px
