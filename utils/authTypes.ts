@@ -12,6 +12,10 @@ export interface AuthUser {
   roles: string[]
   tenantId?: string
   deptId?: string
+  /** 邮箱（有则展示） */
+  email?: string | null
+  /** 手机（有则展示） */
+  phone?: string | null
   createdAt: string
   updatedAt: string
 }
