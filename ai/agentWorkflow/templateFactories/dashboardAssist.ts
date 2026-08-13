@@ -25,9 +25,6 @@ export function createDashboardAssistWorkflowGraph(): AgentWorkflowGraph {
         type: 'llm',
         position: { x: 320, y: 200 },
         data: {
-          label: 'Dashboard Analysis & Recommendation',
-          model: 'default',
-          temperature: 0.3,
           label: '仪表盘分析与推荐',
           model: 'default',
           temperature: 0.3,
