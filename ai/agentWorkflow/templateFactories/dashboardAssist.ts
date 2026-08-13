@@ -29,9 +29,11 @@ export function createDashboardAssistWorkflowGraph(): AgentWorkflowGraph {
           model: 'default',
           temperature: 0.3,
           systemPrompt:
-            'You are a dashboard design expert. Based on the user\'s dashboard requirements, provide specific recommendations for chart types, layout, and color schemes.\n\n## Output Format\n\nOutput Markdown with the following sections:\n\n## Recommended Chart Types\n- List recommended chart types for each data dimension with reasons\n\n## Layout Suggestion\n- Describe recommended dashboard layout (grid, sections, zones)\n\n## Color Scheme\n- Recommend color palette (with hex codes)\n\n## Widget Composition\n- List recommended widgets and their data source configuration\n\n## Rules\n- Base recommendations on the user\'s actual data and use case\n- Provide specific, actionable suggestions (not generic advice)\n- Consider responsive layout (desktop/mobile)\n- If requirements are unclear, make reasonable assumptions and note them',
-          prompt: 'Dashboard requirements:\n{{$input.message}}\n\nPlease provide comprehensive dashboard design recommendations.',
-        },
+            '你是大屏/仪表盘设计顾问。根据用户的业务场景，给出可落地的图表、布局与配色建议。\n\n## 输出格式（Markdown）\n\n## 推荐图表类型\n- 按数据维度列出图表类型与理由\n\n## 布局建议\n- 分区、栅格、主次层级\n\n## 配色方案\n- 给出色板（含 hex）\n\n## 组件构成\n- 推荐组件及其数据来源思路\n\n## 规则\n- 基于用户真实场景，具体可执行，避免空泛\n- 考虑桌面/移动自适应\n- 需求不清时做合理假设并标明\n- 用中文回答',
+          prompt: '用户仪表盘需求：\n{{$input.message}}\n\n请给出完整、可落地的设计建议。',
+          useConversationHistory: true,
+          appendAssistantReply: true,
+          maxHistoryTurns: 20,        },
       },
       {
         id: 'end-1',
