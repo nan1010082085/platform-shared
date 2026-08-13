@@ -4,6 +4,7 @@
     :title="title"
     :width="width"
     :loading="loading"
+    :show-fullscreen-btn="showFullscreenBtn"
     @update:model-value="$emit('update:modelValue', $event)"
     @confirm="handleConfirm"
     @cancel="handleCancel"
@@ -32,11 +33,14 @@ const props = withDefaults(defineProps<{
   labelWidth?: string
   formData: Record<string, unknown>
   rules?: FormRules
+  /** 表单弹窗默认不需要全屏 */
+  showFullscreenBtn?: boolean
 }>(), {
   width: '500px',
   loading: false,
   labelWidth: '100px',
   rules: () => ({}),
+  showFullscreenBtn: false,
 })
 
 const emit = defineEmits<{

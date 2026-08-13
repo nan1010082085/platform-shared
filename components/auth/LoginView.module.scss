@@ -1,31 +1,77 @@
 .login-page {
+  --login-ease: cubic-bezier(0.22, 1, 0.36, 1);
+  --login-duration: 0.55s;
+  position: relative;
   width: 100vw;
   min-height: 100vh;
   display: flex;
   align-items: center;
   justify-content: center;
-  background: var(--bg-color-page);
-  background-image:
-    linear-gradient(rgba(0, 96, 162, 0.04) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(0, 96, 162, 0.04) 1px, transparent 1px);
-  background-size: 24px 24px;
+  padding: 24px 16px;
+  overflow: hidden;
+  background:
+    radial-gradient(1200px 600px at 12% -10%, rgba(var(--color-primary-rgb), 0.14), transparent 55%),
+    radial-gradient(900px 500px at 92% 8%, rgba(69, 129, 233, 0.12), transparent 50%),
+    radial-gradient(800px 480px at 50% 110%, rgba(var(--color-primary-rgb), 0.08), transparent 55%),
+    linear-gradient(165deg, #eef4fb 0%, var(--bg-color-page, #f5f6fa) 42%, #e8eef7 100%);
+}
+
+.login-atmosphere {
+  pointer-events: none;
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+}
+
+.login-orb {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(40px);
+  opacity: 0.55;
+  animation: login-orb-drift 18s var(--login-ease) infinite alternate;
+}
+
+.login-orb--a {
+  width: 280px;
+  height: 280px;
+  top: 8%;
+  left: -60px;
+  background: rgba(var(--color-primary-rgb), 0.22);
+}
+
+.login-orb--b {
+  width: 220px;
+  height: 220px;
+  right: -40px;
+  bottom: 18%;
+  background: rgba(69, 129, 233, 0.18);
+  animation-delay: -6s;
+  animation-duration: 22s;
 }
 
 .login-card {
+  position: relative;
+  z-index: 1;
   width: 100%;
   max-width: 400px;
-  padding: 40px 32px;
-  background: var(--bg-color-white);
-  border: 1px solid var(--border-color-light);
-  border-radius: var(--border-radius-lg, 8px);
-  box-shadow: var(--shadow-md, 0 4px 12px rgba(0, 0, 0, 0.08));
+  padding: 44px 36px 36px;
+  background: color-mix(in srgb, var(--bg-color-white, #fff) 88%, transparent);
+  border: 1px solid rgba(var(--color-primary-rgb), 0.1);
+  border-radius: 16px;
+  box-shadow:
+    0 1px 2px rgba(15, 35, 70, 0.04),
+    0 12px 32px rgba(15, 35, 70, 0.08),
+    0 28px 64px rgba(var(--color-primary-rgb), 0.08);
+  backdrop-filter: blur(12px);
+  animation: login-card-in var(--login-duration) var(--login-ease) both;
 }
 
 .login-header {
   display: flex;
   flex-direction: column;
   align-items: center;
-  margin-bottom: 32px;
+  margin-bottom: 28px;
+  animation: login-rise 0.5s var(--login-ease) 0.08s both;
 }
 
 .login-brand {
@@ -36,22 +82,24 @@
 }
 
 .login-logo-icon {
-  width: 36px;
-  height: 36px;
-  border-radius: 6px;
-  background: var(--color-primary);
-  color: var(--text-color-inverse);
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  background: linear-gradient(145deg, var(--color-primary-hover, #4581e9), var(--color-primary, #0060a2));
+  color: var(--text-color-inverse, #fff);
   display: flex;
   align-items: center;
   justify-content: center;
   font-size: 18px;
   font-weight: 700;
   flex-shrink: 0;
+  box-shadow: 0 8px 18px rgba(var(--color-primary-rgb), 0.28);
 }
 
 .login-logo {
   font-size: 22px;
-  font-weight: 600;
+  font-weight: 650;
+  letter-spacing: -0.02em;
   color: var(--text-color-title);
   margin: 0;
   line-height: var(--line-height-tight, 1.25);
@@ -66,6 +114,7 @@
 
 .login-alert {
   margin-bottom: 16px;
+  animation: login-rise 0.4s var(--login-ease) both;
 }
 
 .login-form {
@@ -78,6 +127,8 @@
   display: flex;
   flex-direction: column;
   gap: 6px;
+  animation: login-rise 0.5s var(--login-ease) both;
+  animation-delay: calc(0.16s + var(--enter-i, 0) * 0.07s);
 }
 
 .form-label {
@@ -86,9 +137,44 @@
   color: var(--text-color-primary);
 }
 
+.form-field :global(.el-input__wrapper) {
+  transition:
+    box-shadow 0.2s ease,
+    border-color 0.2s ease,
+    background-color 0.2s ease;
+}
+
+.form-field :global(.el-input__wrapper:hover) {
+  box-shadow: 0 0 0 1px rgba(var(--color-primary-rgb), 0.22) inset;
+}
+
+.form-field :global(.el-input__wrapper.is-focus) {
+  box-shadow:
+    0 0 0 1px var(--color-primary, #0060a2) inset,
+    0 0 0 3px rgba(var(--color-primary-rgb), 0.14);
+}
+
 .login-button {
   width: 100%;
   margin-top: 4px;
+  border-radius: 10px !important;
+  transition:
+    transform 0.2s var(--login-ease),
+    box-shadow 0.2s ease,
+    filter 0.2s ease;
+  animation: login-rise 0.5s var(--login-ease) both;
+  animation-delay: calc(0.16s + var(--enter-i, 3) * 0.07s);
+  box-shadow: 0 8px 18px rgba(var(--color-primary-rgb), 0.22);
+}
+
+.login-button:hover:not(:disabled) {
+  transform: translateY(-1px);
+  filter: brightness(1.03);
+  box-shadow: 0 12px 24px rgba(var(--color-primary-rgb), 0.28);
+}
+
+.login-button:active:not(:disabled) {
+  transform: translateY(0);
 }
 
 .login-links {
@@ -96,4 +182,62 @@
   justify-content: center;
   gap: 24px;
   margin-top: 20px;
+  animation: login-rise 0.5s var(--login-ease) both;
+  animation-delay: calc(0.2s + var(--enter-i, 4) * 0.07s);
+}
+
+.login-links :global(.el-link) {
+  transition: opacity 0.2s ease, transform 0.2s ease;
+}
+
+.login-links :global(.el-link:hover) {
+  transform: translateY(-1px);
+}
+
+@keyframes login-card-in {
+  from {
+    opacity: 0;
+    transform: translateY(18px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes login-rise {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes login-orb-drift {
+  from {
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+  to {
+    transform: translate3d(24px, -18px, 0) scale(1.08);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .login-card,
+  .login-header,
+  .login-alert,
+  .form-field,
+  .login-button,
+  .login-links,
+  .login-orb {
+    animation: none !important;
+  }
+
+  .login-button:hover:not(:disabled),
+  .login-links :global(.el-link:hover) {
+    transform: none;
+  }
 }

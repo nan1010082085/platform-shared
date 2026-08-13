@@ -153,6 +153,16 @@ function handleSubmit(): Promise<void> {
   }
 }
 
+/** 切换登录/注册等模式时重播表单入场 */
+const formEnterKey = ref(0)
+
+/**
+ * 表单字段入场序号（用于错落 delay）
+ */
+function fieldStyle(index: number): Record<string, string> {
+  return { '--enter-i': String(index) }
+}
+
 function switchMode(newMode: ViewMode) {
   mode.value = newMode
   errorMsg.value = null
@@ -160,11 +170,17 @@ function switchMode(newMode: ViewMode) {
   form.password = ''
   form.confirmPassword = ''
   form.oldPassword = ''
+  formEnterKey.value += 1
 }
 </script>
 
 <template>
   <div :class="styles['login-page']">
+    <div :class="styles['login-atmosphere']" aria-hidden="true">
+      <span :class="[styles['login-orb'], styles['login-orb--a']]" />
+      <span :class="[styles['login-orb'], styles['login-orb--b']]" />
+    </div>
+
     <div :class="styles['login-card']">
       <div :class="styles['login-header']">
         <div :class="styles['login-brand']">
@@ -194,8 +210,16 @@ function switchMode(newMode: ViewMode) {
         @close="successMsg = null"
       />
 
-      <form :class="styles['login-form']" @submit.prevent="handleSubmit">
-        <div v-if="mode !== 'changePassword'" :class="styles['form-field']">
+      <form
+        :key="`${mode}-${formEnterKey}`"
+        :class="styles['login-form']"
+        @submit.prevent="handleSubmit"
+      >
+        <div
+          v-if="mode !== 'changePassword'"
+          :class="styles['form-field']"
+          :style="fieldStyle(0)"
+        >
           <label for="login-username" :class="styles['form-label']">用户名</label>
           <el-input
             id="login-username"
@@ -207,7 +231,11 @@ function switchMode(newMode: ViewMode) {
           />
         </div>
 
-        <div v-if="mode === 'register'" :class="styles['form-field']">
+        <div
+          v-if="mode === 'register'"
+          :class="styles['form-field']"
+          :style="fieldStyle(1)"
+        >
           <label for="login-nickname" :class="styles['form-label']">昵称（选填）</label>
           <el-input
             id="login-nickname"
@@ -219,7 +247,11 @@ function switchMode(newMode: ViewMode) {
           />
         </div>
 
-        <div v-if="mode === 'register'" :class="styles['form-field']">
+        <div
+          v-if="mode === 'register'"
+          :class="styles['form-field']"
+          :style="fieldStyle(2)"
+        >
           <label for="login-phone" :class="styles['form-label']">手机号（选填）</label>
           <el-input
             id="login-phone"
@@ -231,7 +263,11 @@ function switchMode(newMode: ViewMode) {
           />
         </div>
 
-        <div v-if="mode === 'changePassword'" :class="styles['form-field']">
+        <div
+          v-if="mode === 'changePassword'"
+          :class="styles['form-field']"
+          :style="fieldStyle(0)"
+        >
           <label for="login-old-password" :class="styles['form-label']">当前密码</label>
           <el-input
             id="login-old-password"
@@ -245,7 +281,10 @@ function switchMode(newMode: ViewMode) {
           />
         </div>
 
-        <div :class="styles['form-field']">
+        <div
+          :class="styles['form-field']"
+          :style="fieldStyle(mode === 'register' ? 3 : mode === 'changePassword' ? 1 : 1)"
+        >
           <label for="login-password" :class="styles['form-label']">{{ mode === 'changePassword' ? '新密码' : '密码' }}</label>
           <el-input
             id="login-password"
@@ -259,7 +298,11 @@ function switchMode(newMode: ViewMode) {
           />
         </div>
 
-        <div v-if="mode !== 'login'" :class="styles['form-field']">
+        <div
+          v-if="mode !== 'login'"
+          :class="styles['form-field']"
+          :style="fieldStyle(mode === 'register' ? 4 : 2)"
+        >
           <label for="login-confirm-password" :class="styles['form-label']">确认密码</label>
           <el-input
             id="login-confirm-password"
@@ -278,13 +321,17 @@ function switchMode(newMode: ViewMode) {
           size="large"
           native-type="submit"
           :class="styles['login-button']"
+          :style="fieldStyle(mode === 'register' ? 5 : mode === 'changePassword' ? 3 : 2)"
           :loading="loading.login"
         >
           {{ mode === 'register' ? '注册' : mode === 'changePassword' ? '修改密码' : '登录' }}
         </el-button>
       </form>
 
-      <div :class="styles['login-links']">
+      <div
+        :class="styles['login-links']"
+        :style="fieldStyle(mode === 'register' ? 6 : mode === 'changePassword' ? 4 : 3)"
+      >
         <template v-if="mode === 'login'">
           <el-link type="primary" @click="switchMode('register')">注册账号</el-link>
           <el-link type="primary" @click="switchMode('changePassword')">修改密码</el-link>

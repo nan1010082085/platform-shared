@@ -22,6 +22,7 @@ import {
   stopTokenRefreshSchedule,
   refreshAccessToken,
 } from './authSession'
+import { resolvePostLoginNavigation } from './authPaths'
 import type { LoginPayload, LoginResponse, AuthUser } from './authTypes'
 
 /** Whether tokenProvider has been injected (once globally) */
@@ -75,18 +76,16 @@ export function useAuth() {
       store.setUserKey(res.user.id)
       scheduleRefresh(res.expiresIn)
 
-      let redirect = (route.query.redirect as string) || '/'
-
-      // 避免路径重复：如果 redirect 以 router base 开头，去掉 base 前缀
-      const base = import.meta.env.BASE_URL || '/'
-      if (base !== '/' && redirect.startsWith(base)) {
-        redirect = redirect.slice(base.length - 1) // 保留开头的 /
-      }
+      const redirect = (route.query.redirect as string) || '/'
+      const base = import.meta.env.BASE_URL || import.meta.env.VITE_ROUTE_BASE || '/'
+      const nav = resolvePostLoginNavigation(redirect, base)
 
       if (onSuccess) {
-        onSuccess(redirect)
+        onSuccess(nav.mode === 'router' ? nav.path : nav.href)
+      } else if (nav.mode === 'location') {
+        window.location.assign(nav.href)
       } else {
-        await router.push(redirect)
+        await router.push(nav.path)
       }
     } finally {
       store.setLoading('login', false)

@@ -64,6 +64,14 @@
       "types": "./dist/utils/useDataLoading.d.ts",
       "import": "./dist/utils/useDataLoading.js"
     },
+    "./utils/pagination": {
+      "types": "./dist/utils/pagination.d.ts",
+      "import": "./dist/utils/pagination.js"
+    },
+    "./utils/useClientPagination": {
+      "types": "./dist/utils/useClientPagination.d.ts",
+      "import": "./dist/utils/useClientPagination.js"
+    },
     "./utils/logger": {
       "types": "./dist/utils/logger.d.ts",
       "import": "./dist/utils/logger.js"

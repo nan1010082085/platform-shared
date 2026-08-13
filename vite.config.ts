@@ -41,6 +41,8 @@ export default defineConfig({
         'utils/sso': resolve(__dirname, 'utils/sso.ts'),
         'utils/useAuth': resolve(__dirname, 'utils/useAuth.ts'),
         'utils/useDataLoading': resolve(__dirname, 'utils/useDataLoading.ts'),
+        'utils/pagination': resolve(__dirname, 'utils/pagination.ts'),
+        'utils/useClientPagination': resolve(__dirname, 'utils/useClientPagination.ts'),
         'utils/logger': resolve(__dirname, 'utils/logger.ts'),
         'qiankun/index': resolve(__dirname, 'qiankun/index.ts'),
         'qiankun/createQiankunApp': resolve(__dirname, 'qiankun/createQiankunApp.ts'),

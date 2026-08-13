@@ -18,6 +18,8 @@ export * from './utils/message'
 export * from './utils/sso'
 export * from './utils/useAuth'
 export * from './utils/useDataLoading'
+export * from './utils/pagination'
+export * from './utils/useClientPagination'
 export * from './utils/stores/index'
 
 // Qiankun
