@@ -121,6 +121,13 @@
   display: flex;
   flex-direction: column;
   gap: 16px;
+  align-items: stretch;
+}
+
+.login-form > * {
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
 }
 
 .form-field {
@@ -137,7 +144,12 @@
   color: var(--text-color-primary);
 }
 
+.form-field :global(.el-input) {
+  width: 100%;
+}
+
 .form-field :global(.el-input__wrapper) {
+  width: 100%;
   transition:
     box-shadow 0.2s ease,
     border-color 0.2s ease,
@@ -154,26 +166,35 @@
     0 0 0 3px rgba(var(--color-primary-rgb), 0.14);
 }
 
-.login-button {
+/**
+ * 与 large 输入框同宽同高同圆角；去掉外扩阴影以免视觉上比输入框更宽。
+ */
+.login-button:global(.el-button) {
   width: 100%;
+  max-width: 100%;
+  min-width: 0;
   margin-top: 4px;
-  border-radius: 10px !important;
+  margin-left: 0;
+  margin-right: 0;
+  height: var(--el-component-size-large, 40px) !important;
+  padding: 0 16px !important;
+  border-radius: var(--el-border-radius-base, 4px) !important;
+  box-sizing: border-box;
+  box-shadow: none;
   transition:
     transform 0.2s var(--login-ease),
-    box-shadow 0.2s ease,
     filter 0.2s ease;
   animation: login-rise 0.5s var(--login-ease) both;
   animation-delay: calc(0.16s + var(--enter-i, 3) * 0.07s);
-  box-shadow: 0 8px 18px rgba(var(--color-primary-rgb), 0.22);
 }
 
-.login-button:hover:not(:disabled) {
+.login-button:global(.el-button):hover:not(:disabled) {
   transform: translateY(-1px);
   filter: brightness(1.03);
-  box-shadow: 0 12px 24px rgba(var(--color-primary-rgb), 0.28);
+  box-shadow: none;
 }
 
-.login-button:active:not(:disabled) {
+.login-button:global(.el-button):active:not(:disabled) {
   transform: translateY(0);
 }
 
@@ -236,7 +257,7 @@
     animation: none !important;
   }
 
-  .login-button:hover:not(:disabled),
+  .login-button:global(.el-button):hover:not(:disabled),
   .login-links :global(.el-link:hover) {
     transform: none;
   }
