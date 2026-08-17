@@ -280,12 +280,19 @@ export interface WorkflowExecutionPayload {
   workflowName: string
   status: string
   nodeRecords?: unknown[]
+  /** 向后兼容：最近一条流式输出（单一节点） */
   streamingOutput?: {
     nodeId: string
     nodeType: string
     text: string
     updatedAt: string
   } | null
+  /** per-node streaming outputs map（多个节点可同时拥有流式文本） */
+  streamingOutputs?: Record<string, {
+    nodeType: string
+    text: string
+    updatedAt: string
+  }> | null
   error?: string
   [key: string]: unknown
 }
@@ -321,4 +328,22 @@ export function onWorkflowError(handler: (data: { executionId?: string; message:
   if (!socket) return () => {}
   socket.on('workflow:error', handler)
   return () => { socket?.off('workflow:error', handler) }
+}
+
+// ---- 工作流节点级事件（per-node streamingOutput + node-event）----
+
+export interface WorkflowNodeEvent {
+  executionId: string
+  eventType: string
+  nodeId?: string
+  nodeType?: string
+  text?: string
+  [key: string]: unknown
+}
+
+/** 监听节点级事件（tool-call / streaming / progress） */
+export function onWorkflowNodeEvent(handler: (data: WorkflowNodeEvent) => void): () => void {
+  if (!socket) return () => {}
+  socket.on('workflow:node-event', handler)
+  return () => { socket?.off('workflow:node-event', handler) }
 }

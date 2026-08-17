@@ -255,6 +255,12 @@ export interface AgentWorkflowNodeData {
   agentLoopInputTemplate?: string
   /** agent-loop 工具调用总次数硬上限（防 token 失控），默认 50 */
   agentLoopMaxToolInvocations?: number
+  /** agent-loop 启用 DSH harness 后端（发消息到 harness，harness agent 推理后返回） */
+  dshBackend?: boolean
+  /** DSH harness 服务地址（默认 http://127.0.0.1:5310） */
+  dshBaseUrl?: string
+  /** DSH harness 鉴权 token（Bearer） */
+  dshToken?: string
   /** agent-team：团队成员列表 */
   agentTeamMembers?: Array<{
     name: string
