@@ -44,6 +44,7 @@ export type AgentNodeType =
   | 'form-query'
   | 'anomaly-detect'
   | 'chart-generate'
+  | 'autonomous-agent'
 
 export type AgentWorkflowStatus = 'draft' | 'published' | 'archived'
 
@@ -308,6 +309,27 @@ export interface AgentWorkflowNodeData {
   /** chart-generate：图表类型 + 数据字段 */
   chartType?: 'auto' | 'bar' | 'line' | 'pie' | 'table'
   chartDataField?: string
+  /** autonomous-agent：DSH harness 自主智能体节点 */
+  /** agent 任务描述模板，支持 {{$input.xxx}} / {{$node.xxx}} */
+  agentTaskPrompt?: string
+  /** agent 可用工具集（空=使用 harness 默认工具集） */
+  agentAllowedTools?: string[]
+  /** agent 最大轮次（harness session budget），默认 10 */
+  agentMaxTurns?: number
+  /** agent token 预算（harness session budget），默认 100000 */
+  agentTokenBudget?: number
+  /** agent 超时秒数，默认 300 */
+  agentTimeoutSeconds?: number
+  /** agent 是否可被人工中断（HITL 模式），默认 false */
+  agentInterruptible?: boolean
+  /** agent 中断时展示给用户的消息 */
+  agentInterruptMessage?: string
+  /** agent 完成后的输出提取策略 */
+  agentOutputSource?: 'lastMessage' | 'toolResult' | 'custom'
+  /** agentOutputSource=custom 时的提取模板 */
+  agentOutputTemplate?: string
+  /** 使用的 harness 会话 ID（运行时填充，非持久化） */
+  _harnessSessionId?: string
 }
 
 /** 图片生成节点专用数据子集（用于类型安全的参数传递） */
