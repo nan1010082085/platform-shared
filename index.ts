@@ -22,6 +22,23 @@ export * from './utils/pagination'
 export * from './utils/useClientPagination'
 export * from './utils/stores/index'
 
+// Logger
+export {
+  createLogger,
+  shellLog,
+  qiankunLog,
+  editorLog,
+  flowLog,
+  aiLog,
+  serverLog,
+  socketLog,
+  authLog,
+  uaLog,
+  defaultLog,
+  log
+} from './utils/logger'
+export type { Logger } from './utils/logger'
+
 // Qiankun
 export * from './qiankun/index'
 export { createQiankunApp } from './qiankun/createQiankunApp'
