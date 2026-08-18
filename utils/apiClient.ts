@@ -10,12 +10,14 @@ import { isAuthLoginPath, redirectToLogin } from './authPaths.js'
 
 export class ApiError extends Error {
   public readonly status: number
+  public readonly code?: string
   public readonly details: unknown
 
-  constructor(message: string, status: number, details?: unknown) {
+  constructor(message: string, status: number, code?: string, details?: unknown) {
     super(message)
     this.name = 'ApiError'
     this.status = status
+    this.code = code
     this.details = details
     Object.setPrototypeOf(this, ApiError.prototype)
   }
@@ -24,7 +26,7 @@ export class ApiError extends Error {
 export interface ApiResponse<T> {
   success: boolean
   data: T
-  error?: { message: string; details?: unknown }
+  error?: { code?: string; message: string; details?: unknown }
 }
 
 const BASE_URL = import.meta.env.VITE_API_BASE_URL || '/schema-platform/api'
@@ -85,7 +87,7 @@ instance.interceptors.response.use(
     const json = response.data
     if (!json.success) {
       return Promise.reject(
-        new ApiError(json.error?.message ?? 'Request failed', response.status, json.error?.details),
+        new ApiError(json.error?.message ?? 'Request failed', response.status, json.error?.code, json.error?.details),
       )
     }
     return response
@@ -132,7 +134,8 @@ instance.interceptors.response.use(
       const message =
         (typeof body === 'object' && body !== null ? body.error?.message : undefined)
         ?? (error instanceof Error ? error.message : 'Request failed')
-      return Promise.reject(new ApiError(message, status))
+      const code = typeof body === 'object' && body !== null ? body.error?.code : undefined
+      return Promise.reject(new ApiError(message, status, code))
     }
 
     // 网络错误等
